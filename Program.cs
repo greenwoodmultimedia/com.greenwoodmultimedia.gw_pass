@@ -24,7 +24,7 @@ namespace gw_pass
             ListeService listeService = null;
             bool en_fonction = true;
             bool authenfifier = false;
-            string version = "1.0.1";
+            string version = "1.1.0";
 
             //Changement du titre de la console
             Console.Title = "GW PASS - Votre keychain portatif !";
@@ -321,12 +321,12 @@ namespace gw_pass
                 key = Console.ReadKey(true);
 
                 // Ignore any key out of range.
-                if (((int)key.Key) >= 65 && ((int)key.Key <= 90))
-                {
+                /*if (((int)key.Key) >= 65 && ((int)key.Key <= 90))
+                {*/
                     // Append the character to the password.
                     securePwd.AppendChar(key.KeyChar);
                     Console.Write("*");
-                }
+                /*}*/
                 // Exit if Enter key is pressed.
             } while (key.Key != ConsoleKey.Enter);
             Console.WriteLine();
@@ -337,11 +337,11 @@ namespace gw_pass
         /// <summary>
         /// Hash un mot de passe en sha256.
         /// </summary>
-        /// <param name="text">Le texte à hashé.</param>
+        /// <param name="text">Le mot de passe à hashé sous forme de Secure String.</param>
         /// <returns>Retourne le hash.</returns>
         public static string obtenirHashSha256(SecureString mot_de_passe)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(mot_de_passe.ToString());
+            byte[] bytes = Encoding.UTF8.GetBytes(new System.Net.NetworkCredential(string.Empty, mot_de_passe).Password);
             SHA256Managed hashstring = new SHA256Managed();
             byte[] hash = hashstring.ComputeHash(bytes);
             string hashString = string.Empty;
