@@ -11,6 +11,11 @@
         public string nom { set; get; }
 
         /// <summary>
+        /// Représente le courriel d'un service.
+        /// </summary>
+        public string courriel { set; get; }
+
+        /// <summary>
         /// Représente le mot de passe d'un service.
         /// </summary>
         public string mot_de_passe { set; get; }

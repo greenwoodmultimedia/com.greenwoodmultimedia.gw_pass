@@ -19,7 +19,7 @@ namespace gw_pass
         static void Main(string[] args)
         {
             //Constantes
-            const string nom_fichier_donnees = "gw_pass_data.json";
+            const string nom_fichier_donnees = "./data/gw_pass_data.json";
 
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
@@ -27,7 +27,7 @@ namespace gw_pass
             ListeService listeService = null;
             bool en_fonction = true;
             bool authentifier = false;
-            string version = "1.2.0";
+            string version = "1.2.1";
 
             //Changement du titre de la console
             Console.Title = "GW PASS - Votre keychain portatif !";
@@ -92,6 +92,11 @@ namespace gw_pass
 
                 string configuration_json_data = JsonConvert.SerializeObject(configuration, Formatting.Indented);
 
+                if(!Directory.Exists("./data"))
+                {
+                    Directory.CreateDirectory("data");
+                }
+
                 //Succes
                 File.WriteAllBytes(@nom_fichier_donnees, Encoding.UTF8.GetBytes(configuration_json_data));
                 Console.WriteLine("gw_pass>Fichier de configuration par défaut créer et encrypté !");
@@ -122,8 +127,11 @@ namespace gw_pass
                 //On entre dans la section commune du programme.
                 while (en_fonction && authentifier)
                 {
+                    //Invite de commande de gw_pass
                     Console.Write("gw_pass>");
+                    //Lecture de la commande
                     string commande = Console.ReadLine();
+
                     if (commande == "quitter")
                     {
                         //On désactive le programme
@@ -175,7 +183,10 @@ namespace gw_pass
                                 if (listeService.services[i].nom == nom_service)
                                 {
                                     Console.WriteLine();
+                                    Console.WriteLine("INFORMATIONS DU SERVICE");
+                                    Console.WriteLine();
                                     Console.WriteLine("Nom du service: " + listeService.services[i].nom);
+                                    Console.WriteLine("Courriel du service: " + listeService.services[i].courriel);
                                     Console.WriteLine("Mot de passe: " + listeService.services[i].mot_de_passe);
                                     Console.WriteLine();
                                     trouve = true;
@@ -197,15 +208,37 @@ namespace gw_pass
                     }
                     else if (commande == "ajouter_service")
                     {
+                        bool trouve = false;
                         Console.WriteLine();
                         Console.Write("Veuillez entrer le nom du service: ");
                         string nom_service = Console.ReadLine();
+
+                        for (int i = 0; i < listeService.services.Count; i++)
+                        {
+                            if (listeService.services[i].nom == nom_service)
+                            {
+                                trouve = true;
+                            }
+                        }
+
+                        if (trouve)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine("Un service du même nom existe déjà ! Le service demandé ne sera pas ajouté !");
+                            Console.WriteLine();
+                            continue;
+                        }
+
+                        Console.Write("Veuillez entrer le courriel du service: ");
+                        string courriel = Console.ReadLine();
+
                         Console.Write("Veuillez entrer le mot de passe du service: ");
                         string mot_de_passe = Console.ReadLine();
 
                         Service nouveau_service = new Service()
                         {
                             nom = nom_service,
+                            courriel = courriel,
                             mot_de_passe = mot_de_passe
                         };
 
@@ -232,6 +265,8 @@ namespace gw_pass
                                 {
                                     listeService.services.Remove(listeService.services[i]);
                                     trouve = true;
+                                    Console.WriteLine("Le service a bel et bien été supprimé !");
+                                    Console.WriteLine();
                                 }
                             }
 
@@ -255,7 +290,9 @@ namespace gw_pass
                     }
                     else if (commande == "derniere_connexion")
                     {
+                        Console.WriteLine();
                         Console.WriteLine("Vous avez utilisé la dernière fois ce fichier le " + configuration.derniere_date_acces + ".");
+                        Console.WriteLine();
                     }
                     else if (commande == "aide")
                     {
