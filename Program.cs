@@ -154,7 +154,7 @@ namespace gw_pass
                     }
                     else if (commande == "voir_service")
                     {
-                        if (listeService != null && configuration.liste_services.Length > 0)
+                        if (listeService != null && listeService.services.Count > 0)
                         {
                             Console.Write("Veuillez entrer le nom du service :");
                             string nom_service = Console.ReadLine();
