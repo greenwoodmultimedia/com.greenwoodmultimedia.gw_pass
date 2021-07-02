@@ -10,7 +10,7 @@
     <Description>Programme console permettant de stocker des mots de passe localement sur une machine. Utilise l'encryption AES CBC afin d'assurer la confidentialité des données. Un mot de passe utilisé par l'utilisateur permet d'encrypter et de décrypter ses mots de passe. Dans le programme console, l'utilisateur peut ajouter et voir ses services.</Description>
     <NeutralLanguage>fr-CA</NeutralLanguage>
     <AssemblyOriginatorKeyFile>gw_pass_key.pfx</AssemblyOriginatorKeyFile>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

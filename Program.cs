@@ -24,7 +24,7 @@ namespace gw_pass
             ListeService listeService = null;
             bool en_fonction = true;
             bool authenfifier = false;
-            string version = "1.1.0";
+            string version = "1.1.1";
 
             //Changement du titre de la console
             Console.Title = "GW PASS - Votre keychain portatif !";
