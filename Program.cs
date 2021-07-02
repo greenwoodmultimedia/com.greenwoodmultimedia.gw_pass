@@ -321,13 +321,21 @@ namespace gw_pass
                 key = Console.ReadKey(true);
 
                 // Ignore any key out of range.
-                /*if (((int)key.Key) >= 65 && ((int)key.Key <= 90))
-                {*/
-                    // Append the character to the password.
+                if(((int)key.Key) == 8)
+                {
+                    if(securePwd.Length > 0)
+                    {
+                        Console.CursorLeft -= 1;
+                        Console.Write(" ");
+                        Console.CursorLeft -= 1;
+                        securePwd.RemoveAt(securePwd.Length - 1);
+                    }
+                }
+                else
+                {
                     securePwd.AppendChar(key.KeyChar);
                     Console.Write("*");
-                /*}*/
-                // Exit if Enter key is pressed.
+                }
             } while (key.Key != ConsoleKey.Enter);
             Console.WriteLine();
 
