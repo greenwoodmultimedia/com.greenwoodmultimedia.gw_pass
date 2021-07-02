@@ -18,13 +18,16 @@ namespace gw_pass
         /// <param name="args">Arguments du programme</param>
         static void Main(string[] args)
         {
+            //Constantes
             const string nom_fichier_donnees = "gw_pass_data.json";
+
+            //Variables du programme
             SecureString cle_decryption_utilisateur = null;
             Configuration configuration = null;
             ListeService listeService = null;
             bool en_fonction = true;
-            bool authenfifier = false;
-            string version = "1.1.1";
+            bool authentifier = false;
+            string version = "1.2.0";
 
             //Changement du titre de la console
             Console.Title = "GW PASS - Votre keychain portatif !";
@@ -55,8 +58,10 @@ namespace gw_pass
                 Console.WriteLine("gw_pass>Aucun fichier de configuration n'a été trouvé. Nous allons en créer un avec vous.");
 
                 //On entre la clé de décryption
+                Console.WriteLine();
                 Console.Write("gw_pass>Veuillez entrer un mot de passe qui sera utilisé pour l'encryption :");
                 cle_decryption_utilisateur = obtenir_mot_de_passe();
+                Console.WriteLine();
 
                 /////////////ENCRYPTION//////////////////
 
@@ -93,27 +98,29 @@ namespace gw_pass
             }
 
             //Authentification
+            Console.WriteLine();
             Console.Write("Veuillez entrer votre clé de décryption :");
             cle_decryption_utilisateur = obtenir_mot_de_passe();
+            Console.WriteLine();
 
             //Vérification de la clé de décryption afin d'authentifier l'utilisateur
             if (obtenirHashSha256(cle_decryption_utilisateur) == configuration.cle_decryption)
             {
-                authenfifier = true;
+                authentifier = true;
 
                 string contenu_liste_service = decrypter(configuration.liste_services, cle_decryption_utilisateur, configuration.sel);
 
                 listeService = JsonConvert.DeserializeObject<ListeService>(contenu_liste_service);
+
+                Console.WriteLine("gw_pass>Vous êtes authentifié !");
 
                 Console.WriteLine("gw_pass>Vous avez utilisé la dernière fois ce fichier le " + configuration.derniere_date_acces + ".");
 
                 //On met à jour la date d'utilisation après avoir afficher la dernière date
                 configuration.derniere_date_acces = DateTime.Now.ToString("MM-dd-yyyy hh:mm:ss");
 
-                Console.WriteLine("gw_pass>Vous êtes authentifié !");
-
                 //On entre dans la section commune du programme.
-                while (en_fonction && authenfifier)
+                while (en_fonction && authentifier)
                 {
                     Console.Write("gw_pass>");
                     string commande = Console.ReadLine();
@@ -141,7 +148,7 @@ namespace gw_pass
                             Console.WriteLine();
                             for (int i = 0; i < listeService.services.Count; i++)
                             {
-                                Console.WriteLine(listeService.services[i].nom);
+                                Console.WriteLine("- " + listeService.services[i].nom);
                             }
                             Console.WriteLine();
                         }
@@ -156,8 +163,12 @@ namespace gw_pass
                     {
                         if (listeService != null && listeService.services.Count > 0)
                         {
-                            Console.Write("Veuillez entrer le nom du service :");
+                            bool trouve = false;
+
+                            Console.WriteLine();
+                            Console.Write("Veuillez entrer le nom du service: ");
                             string nom_service = Console.ReadLine();
+                            Console.WriteLine();
 
                             for (int i = 0; i < listeService.services.Count; i++)
                             {
@@ -167,7 +178,14 @@ namespace gw_pass
                                     Console.WriteLine("Nom du service: " + listeService.services[i].nom);
                                     Console.WriteLine("Mot de passe: " + listeService.services[i].mot_de_passe);
                                     Console.WriteLine();
+                                    trouve = true;
                                 }
+                            }
+
+                            if(trouve == false)
+                            {
+                                Console.WriteLine("Ce service n'existe pas !");
+                                Console.WriteLine();
                             }
                         }
                         else
@@ -179,9 +197,10 @@ namespace gw_pass
                     }
                     else if (commande == "ajouter_service")
                     {
-                        Console.Write("Veuillez entrer le nom du service :");
+                        Console.WriteLine();
+                        Console.Write("Veuillez entrer le nom du service: ");
                         string nom_service = Console.ReadLine();
-                        Console.Write("Veuillez entrer le mot de passe du service :");
+                        Console.Write("Veuillez entrer le mot de passe du service: ");
                         string mot_de_passe = Console.ReadLine();
 
                         Service nouveau_service = new Service()
@@ -191,6 +210,44 @@ namespace gw_pass
                         };
 
                         listeService.services.Add(nouveau_service);
+
+                        Console.WriteLine();
+                        Console.Write("Le service a été ajouté avec succès !");
+                        Console.WriteLine();
+                        Console.WriteLine();
+                    }
+                    else if (commande == "enlever_service")
+                    {
+                        if (listeService != null && listeService.services.Count > 0)
+                        {
+                            bool trouve = false;
+                            Console.WriteLine();
+                            Console.Write("Veuillez entrer le nom du service: ");
+                            string nom_service = Console.ReadLine();
+                            Console.WriteLine();
+
+                            for (int i = 0; i < listeService.services.Count; i++)
+                            {
+                                if (listeService.services[i].nom == nom_service)
+                                {
+                                    listeService.services.Remove(listeService.services[i]);
+                                    trouve = true;
+                                }
+                            }
+
+                            if (trouve == false)
+                            {
+                                Console.WriteLine("Ce service n'existe pas !");
+                                Console.WriteLine();
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine();
+                            Console.Write("Aucun service trouvé dans le keychain. Impossible de supprimer le service demandé.");
+                            Console.WriteLine();
+                            Console.WriteLine();
+                        }
                     }
                     else if (commande == "effacer_console")
                     {
@@ -209,6 +266,7 @@ namespace gw_pass
                         Console.WriteLine("ajouter_service | Procédure pour ajouter un mot de passe du keychain.");
                         Console.WriteLine("derniere_connexion | Indique la dernière connexion réussie de gw_pass.");
                         Console.WriteLine("effacer_console | Efface la ligne de commande de gw_pass.");
+                        Console.WriteLine("enlever_service | Enlève un service du keychain.");
                         Console.WriteLine("liste_service | Procédure pour les services ayant été enregistré dans le keychain.");
                         Console.WriteLine("voir_service | Procédure pour voir un des mots de passe du keychain.");
                         Console.WriteLine("quitter | Ferme gw_pass.");
@@ -240,7 +298,7 @@ namespace gw_pass
             Console.WriteLine("-------------------------------");
             Console.WriteLine("--                           --");
             Console.WriteLine("--    GreenWood Multimedia   --");
-            Console.WriteLine("--   gw_pass Version " + version + "    --");
+            Console.WriteLine("--   gw_pass Version " + version + "   --");
             Console.WriteLine("--                           --");
             Console.WriteLine("--          © " + DateTime.Now.ToString("yyyy") + "           --");
             Console.WriteLine("--                           --");
@@ -320,7 +378,7 @@ namespace gw_pass
             {
                 key = Console.ReadKey(true);
 
-                // Ignore any key out of range.
+                //Si la touche est le backspace, on efface une caractère.
                 if(((int)key.Key) == 8)
                 {
                     if(securePwd.Length > 0)
@@ -330,6 +388,11 @@ namespace gw_pass
                         Console.CursorLeft -= 1;
                         securePwd.RemoveAt(securePwd.Length - 1);
                     }
+                }
+                //Si la touche est ENTER, on saute l'itération actuelle de la boucle.
+                else if(key.Key == ConsoleKey.Enter)
+                {
+                    continue;
                 }
                 else
                 {
