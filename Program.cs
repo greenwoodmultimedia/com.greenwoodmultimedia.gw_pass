@@ -26,6 +26,9 @@ namespace gw_pass
             bool authenfifier = false;
             string version = "1.0.0";
 
+            //Changement du titre de la console
+            Console.Title = "GW PASS - Votre keychain portatif !";
+
             en_tete(version);
 
             //Message de bienvenue
