@@ -57,7 +57,7 @@ namespace gw_pass
                 //On n'a pas trouvé le fichier de configuration, alors on va le créer.
                 Console.WriteLine("gw_pass>Aucun fichier de configuration n'a été trouvé. Nous allons en créer un avec vous.");
 
-                //On entre la clé de décryption
+                //On entre la clé de décryption par l'utilisateur
                 Console.WriteLine();
                 Console.Write("gw_pass>Veuillez entrer un mot de passe qui sera utilisé pour l'encryption :");
                 cle_decryption_utilisateur = obtenir_mot_de_passe();
@@ -65,23 +65,27 @@ namespace gw_pass
 
                 /////////////ENCRYPTION//////////////////
 
+                //Création du sel unique à chaque création de fichier encrypté
                 byte[] sel_random = new byte[8];
-                using (RNGCryptoServiceProvider rngCsp = new
-    RNGCryptoServiceProvider())
+                using (RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider())
                 {
-                    // Fill the array with a random value.
+                    //Rempli le tableau de byte null
                     rngCsp.GetBytes(sel_random);
                 }
 
+                //Création de l'objet représentant la liste des services
                 listeService = new ListeService
                 {
                     services = new System.Collections.Generic.List<Service>{}
                 };
 
+                //Conversion de l'objet des services c# en json
                 string listeService_json_data = JsonConvert.SerializeObject(listeService, Formatting.Indented);
 
+                //On encrypte les données concernant les services.
                 string donneesEncrypteListeService = encrypter(listeService_json_data, cle_decryption_utilisateur, sel_random);
 
+                //Création de l'objet qui représentera la configuration
                 configuration = new Configuration
                 {
                     cle_decryption = obtenirHashSha256(cle_decryption_utilisateur),
@@ -90,19 +94,35 @@ namespace gw_pass
                     liste_services = donneesEncrypteListeService
                 };
 
-                string configuration_json_data = JsonConvert.SerializeObject(configuration, Formatting.Indented);
+                /////////////SAUVEGARDE//////////////////
 
-                if(!Directory.Exists("./data"))
+                //Création du dossier qui contiendra les données de l'application s'il n'existe pas.
+                if (!Directory.Exists("./data"))
                 {
                     Directory.CreateDirectory("data");
                 }
 
-                //Succes
-                File.WriteAllBytes(@nom_fichier_donnees, Encoding.UTF8.GetBytes(configuration_json_data));
+                //Sauvegarde des données de l'application
+                bool succes = sauvegarder_donnees(configuration, nom_fichier_donnees);
+
+                //Si une erreur survient lors du write du fichier de config, on doit stopper l'éxécution. 
+                if(!succes)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("gw_pass>Une erreur est survenue lors de la tentative d'écriture du fichier de configuration.");
+                    Console.WriteLine();
+
+                    //On sort du programme, car il n'a rien à faire.
+                    return;
+                }
+
+                //Succes !
                 Console.WriteLine("gw_pass>Fichier de configuration par défaut créer et encrypté !");
             }
 
-            //Authentification
+            /////////////AUTHENFICATION//////////////////
+
+            //On redemande la clé de décryption afin d'authentifier l'utilisateur
             Console.WriteLine();
             Console.Write("Veuillez entrer votre clé de décryption :");
             cle_decryption_utilisateur = obtenir_mot_de_passe();
@@ -111,14 +131,17 @@ namespace gw_pass
             //Vérification de la clé de décryption afin d'authentifier l'utilisateur
             if (obtenirHashSha256(cle_decryption_utilisateur) == configuration.cle_decryption)
             {
+                //On flag l'utilisateur comme authentifier
                 authentifier = true;
 
+                //On décrypte la liste des services qui sera en format json
                 string contenu_liste_service = decrypter(configuration.liste_services, cle_decryption_utilisateur, configuration.sel);
 
+                //On convertit le format json en un objet c#
                 listeService = JsonConvert.DeserializeObject<ListeService>(contenu_liste_service);
 
+                //Message destiné à l'utilisateur à sa connexion
                 Console.WriteLine("gw_pass>Vous êtes authentifié !");
-
                 Console.WriteLine("gw_pass>Vous avez utilisé la dernière fois ce fichier le " + configuration.derniere_date_acces + ".");
 
                 //On met à jour la date d'utilisation après avoir afficher la dernière date
@@ -129,9 +152,11 @@ namespace gw_pass
                 {
                     //Invite de commande de gw_pass
                     Console.Write("gw_pass>");
+
                     //Lecture de la commande
                     string commande = Console.ReadLine();
 
+                    //Permet de quitter le programme.
                     if (commande == "quitter")
                     {
                         //On désactive le programme
@@ -144,9 +169,9 @@ namespace gw_pass
                         configuration.liste_services = nouveaudonneesEncrypteListeService;
 
                         //On enregistre le data et dans la prochaine boucle, le programme se termine.
-                        string configuration_json_data = JsonConvert.SerializeObject(configuration, Formatting.Indented);
-                        File.WriteAllBytes(@nom_fichier_donnees, Encoding.UTF8.GetBytes(configuration_json_data));
+                        sauvegarder_donnees(configuration, nom_fichier_donnees);
                     }
+                    //Affiche la liste des services.
                     else if (commande == "liste_service")
                     {
                         if (listeService != null && listeService.services.Count > 0)
@@ -167,6 +192,7 @@ namespace gw_pass
                             Console.WriteLine();
                         }
                     }
+                    //Permet de voir un service en particulier
                     else if (commande == "voir_service")
                     {
                         if (listeService != null && listeService.services.Count > 0)
@@ -206,6 +232,7 @@ namespace gw_pass
                             Console.WriteLine();
                         }
                     }
+                    //Permet d'ajouter un service en particulier
                     else if (commande == "ajouter_service")
                     {
                         bool trouve = false;
@@ -249,6 +276,7 @@ namespace gw_pass
                         Console.WriteLine();
                         Console.WriteLine();
                     }
+                    //Permet d'enlever un service en particulier
                     else if (commande == "enlever_service")
                     {
                         if (listeService != null && listeService.services.Count > 0)
@@ -284,16 +312,19 @@ namespace gw_pass
                             Console.WriteLine();
                         }
                     }
+                    //Efface la console afin d'aider au niveau de la confidentialité
                     else if (commande == "effacer_console")
                     {
                         Console.Clear();
                     }
+                    //Permet de retrouver la date/heure de dernière connexion
                     else if (commande == "derniere_connexion")
                     {
                         Console.WriteLine();
                         Console.WriteLine("Vous avez utilisé la dernière fois ce fichier le " + configuration.derniere_date_acces + ".");
                         Console.WriteLine();
                     }
+                    //Affiche une aide expliquant les commandes gw_pass.
                     else if (commande == "aide")
                     {
                         Console.WriteLine();
@@ -309,6 +340,7 @@ namespace gw_pass
                         Console.WriteLine("quitter | Ferme gw_pass.");
                         Console.WriteLine();
                     }
+                    //Si aucune commande est reconnu, on affiche un message d'erreur.
                     else
                     {
                         Console.WriteLine();
@@ -317,7 +349,7 @@ namespace gw_pass
                     }
                 }
             }
-            //Le programme se ferme dans le cas contraire
+            //Le programme se ferme an cas d'authentification échoué
             else
             {
                 Console.WriteLine("Votre authentification a échoué ! Le programme va se fermer après que vous toucher sur une touche...");
@@ -458,6 +490,27 @@ namespace gw_pass
                 hashString += String.Format("{0:x2}", x);
             }
             return hashString;
+        }
+
+        /// <summary>
+        /// S'occupe de transférer les données au bon endroit.
+        /// </summary>
+        /// <param name="configuration">Objet de type Configuration contenant la configuration de l'application.</param>
+        /// <param name="nom_fichier_donnees">Chemin relatif ou absolu ou le fichier devrait être écrit.</param>
+        /// <returns>Retourne vrai si tout c'est bien passé et faux dans le cas contraire.</returns>
+        public static bool sauvegarder_donnees(Configuration configuration, string nom_fichier_donnees)
+        {
+            try
+            {
+                string configuration_json_data = JsonConvert.SerializeObject(configuration, Formatting.Indented);
+                File.WriteAllBytes(@nom_fichier_donnees, Encoding.UTF8.GetBytes(configuration_json_data));
+                return true;
+            }
+            catch(Exception exception)
+            {
+                //TODO: Idéalement, il faudrait logger l'erreur.
+                return false;
+            }
         }
     }
 }
