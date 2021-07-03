@@ -27,7 +27,7 @@ namespace gw_pass
             ListeService listeService = null;
             bool en_fonction = true;
             bool authentifier = false;
-            string version = "1.2.1";
+            string version = "1.3.0";
 
             //Changement du titre de la console
             Console.Title = "GW PASS - Votre keychain portatif !";
@@ -330,14 +330,26 @@ namespace gw_pass
                         Console.WriteLine();
                         Console.WriteLine("Voici les commandes qui sont disponibles");
                         Console.WriteLine();
-                        Console.WriteLine("aide | Affiche l'aide que vous voyez présentement.");
-                        Console.WriteLine("ajouter_service | Procédure pour ajouter un mot de passe du keychain.");
+                        Console.WriteLine("aide               | Affiche l'aide que vous voyez présentement.");
+                        Console.WriteLine("ajouter_service    | Procédure pour ajouter un mot de passe du keychain.");
+                        Console.WriteLine("credits            | Affiche plus d'informations concernant le concepteur de gw_pass.");
                         Console.WriteLine("derniere_connexion | Indique la dernière connexion réussie de gw_pass.");
-                        Console.WriteLine("effacer_console | Efface la ligne de commande de gw_pass.");
-                        Console.WriteLine("enlever_service | Enlève un service du keychain.");
-                        Console.WriteLine("liste_service | Procédure pour les services ayant été enregistré dans le keychain.");
-                        Console.WriteLine("voir_service | Procédure pour voir un des mots de passe du keychain.");
-                        Console.WriteLine("quitter | Ferme gw_pass.");
+                        Console.WriteLine("effacer_console    | Efface les lignes de commande de gw_pass.");
+                        Console.WriteLine("enlever_service    | Enlève un service du keychain.");
+                        Console.WriteLine("liste_service      | Procédure pour les services ayant été enregistré dans le keychain.");
+                        Console.WriteLine("voir_service       | Procédure pour voir un des mots de passe du keychain.");
+                        Console.WriteLine("quitter            | Ferme gw_pass.");
+                        Console.WriteLine();
+                    }
+                    //Affiche plus d'information concernant le concepteur de gw_pass
+                    else if (commande == "credits")
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("Ce programme est la propriété intellectuelle de GreenWood Multimedia © 2021 - Tous droits réservés.");
+                        Console.WriteLine("Écrit par Christopher Boisvert, propriétaire.");
+                        Console.WriteLine();
+                        Console.WriteLine("Pour en savoir plus sur GreenWood Multimedia");
+                        Console.WriteLine("https://greenwoodmultimedia.com");
                         Console.WriteLine();
                     }
                     //Si aucune commande est reconnu, on affiche un message d'erreur.
