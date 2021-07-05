@@ -20,7 +20,7 @@ namespace gw_pass
         {
             //Constantes
             const string nom_fichier_donnees = "./data/gw_pass_data.json";
-            const string version = "1.5.0";
+            const string version = "1.5.1";
 
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
@@ -87,7 +87,7 @@ namespace gw_pass
                 //Création de l'objet qui représentera la configuration
                 configuration = new Configuration
                 {
-                    cle_decryption = obtenirHashSha256(cle_decryption_utilisateur),
+                    cle_decryption = obtenir_hash_sha_256(cle_decryption_utilisateur),
                     sel = sel_random,
                     derniere_date_acces = DateTime.Now.ToString("MM-dd-yyyy hh:mm:ss"),
                     liste_services = null
@@ -128,7 +128,7 @@ namespace gw_pass
             Console.WriteLine();
 
             //Vérification de la clé de décryption afin d'authentifier l'utilisateur
-            if (obtenirHashSha256(cle_decryption_utilisateur) == configuration.cle_decryption)
+            if (obtenir_hash_sha_256(cle_decryption_utilisateur) == configuration.cle_decryption)
             {
                 //On flag l'utilisateur comme authentifier
                 authentifier = true;
@@ -273,6 +273,9 @@ namespace gw_pass
                         //Ajout de l'objet à la liste de service
                         listeService.services.Add(nouveau_service);
 
+                        //On va trier la liste de manière alphabétique
+                        listeService.services.Sort();
+
                         //On va sauvegarder les données en cas de crash/fermeture innattendue
                         bool succes_sauvegarde = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
 
@@ -337,6 +340,9 @@ namespace gw_pass
                                 listeService.services[i].identifiant = nouveau_identifiant_service;
                                 listeService.services[i].mot_de_passe = nouveau_mot_de_passe;
 
+                                //On va trier la liste de manière alphabétique
+                                listeService.services.Sort();
+
                                 //On va sauvegarder les données en cas de crash/fermeture innattendue
                                 bool succes_sauvegarde = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
 
@@ -390,6 +396,9 @@ namespace gw_pass
                                         
                                     listeService.services.Remove(listeService.services[i]);
                                     trouve = true;
+
+                                    //On va trier la liste de manière alphabétique
+                                    listeService.services.Sort();
 
                                     //On va sauvegarder les données en cas de crash/fermeture innattendue
                                     bool succes_sauvegarde = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
@@ -450,6 +459,7 @@ namespace gw_pass
                         Console.WriteLine();
                         Console.WriteLine("aide               | Affiche l'aide que vous voyez présentement.");
                         Console.WriteLine("ajouter_service    | Procédure pour ajouter un mot de passe du keychain.");
+                        Console.WriteLine("changer_service    | Procédure pour changer un service du keychain.");
                         Console.WriteLine("credits            | Affiche plus d'informations concernant le concepteur de gw_pass.");
                         Console.WriteLine("derniere_connexion | Indique la dernière connexion réussie de gw_pass.");
                         Console.WriteLine("effacer_console    | Efface les lignes de commande de gw_pass.");
@@ -609,7 +619,7 @@ namespace gw_pass
         /// </summary>
         /// <param name="text">Le mot de passe à hashé sous forme de Secure String.</param>
         /// <returns>Retourne le hash.</returns>
-        public static string obtenirHashSha256(SecureString mot_de_passe)
+        public static string obtenir_hash_sha_256(SecureString mot_de_passe)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(new System.Net.NetworkCredential(string.Empty, mot_de_passe).Password);
             SHA256Managed hashstring = new SHA256Managed();
