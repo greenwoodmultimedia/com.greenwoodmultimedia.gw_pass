@@ -20,18 +20,23 @@ namespace gw_pass
         {
             //Constantes
             const string nom_fichier_donnees = "./data/gw_pass_data.json";
+            const string version = "1.5.0";
 
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
             Configuration configuration = null;
             ListeService listeService = null;
+
+            //Variables concernant le statut du programme
             bool en_fonction = true;
             bool authentifier = false;
-            string version = "1.4.0";
+
+            /////////////DÉBUT DE PROGRAMME//////////////////
 
             //Changement du titre de la console
             Console.Title = "GW PASS - Votre keychain portatif !";
 
+            //Affiche l'en-tête du programme gw_pass
             en_tete(version);
 
             //Message de bienvenue
@@ -63,7 +68,7 @@ namespace gw_pass
                 cle_decryption_utilisateur = obtenir_mot_de_passe();
                 Console.WriteLine();
 
-                /////////////ENCRYPTION//////////////////
+                /////////////INITIALISATION DES VARIABLES//////////////////
 
                 //Création du sel unique à chaque création de fichier encrypté
                 byte[] sel_random = new byte[8];
@@ -79,19 +84,13 @@ namespace gw_pass
                     services = new System.Collections.Generic.List<Service>{}
                 };
 
-                //Conversion de l'objet des services c# en json
-                string listeService_json_data = JsonConvert.SerializeObject(listeService, Formatting.Indented);
-
-                //On encrypte les données concernant les services.
-                string donneesEncrypteListeService = encrypter(listeService_json_data, cle_decryption_utilisateur, sel_random);
-
                 //Création de l'objet qui représentera la configuration
                 configuration = new Configuration
                 {
                     cle_decryption = obtenirHashSha256(cle_decryption_utilisateur),
                     sel = sel_random,
                     derniere_date_acces = DateTime.Now.ToString("MM-dd-yyyy hh:mm:ss"),
-                    liste_services = donneesEncrypteListeService
+                    liste_services = null
                 };
 
                 /////////////SAUVEGARDE//////////////////
@@ -103,7 +102,7 @@ namespace gw_pass
                 }
 
                 //Sauvegarde des données de l'application
-                bool succes = sauvegarder_donnees(configuration, nom_fichier_donnees);
+                bool succes = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
 
                 //Si une erreur survient lors du write du fichier de config, on doit stopper l'éxécution. 
                 if(!succes)
@@ -163,14 +162,8 @@ namespace gw_pass
                         //On désactive le programme
                         en_fonction = false;
 
-                        string listeService_json_data = JsonConvert.SerializeObject(listeService, Formatting.Indented);
-
-                        string nouveaudonneesEncrypteListeService = encrypter(listeService_json_data, cle_decryption_utilisateur, configuration.sel);
-
-                        configuration.liste_services = nouveaudonneesEncrypteListeService;
-
                         //On enregistre le data et dans la prochaine boucle, le programme se termine.
-                        sauvegarder_donnees(configuration, nom_fichier_donnees);
+                        sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
                     }
                     //Affiche la liste des services.
                     else if (commande == "liste_service")
@@ -262,7 +255,6 @@ namespace gw_pass
                             continue;
                         }
 
-
                         //Sinon, on continue et on demande les informations du service
                         Console.Write("Veuillez entrer le courriel du service: ");
                         string identifiant = Console.ReadLine();
@@ -281,11 +273,28 @@ namespace gw_pass
                         //Ajout de l'objet à la liste de service
                         listeService.services.Add(nouveau_service);
 
-                        //Affichage du succès de l'opération
-                        Console.WriteLine();
-                        Console.Write("Le service a été ajouté avec succès !");
-                        Console.WriteLine();
-                        Console.WriteLine();
+                        //On va sauvegarder les données en cas de crash/fermeture innattendue
+                        bool succes_sauvegarde = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
+
+                        if(succes_sauvegarde)
+                        {
+                            //Affichage du succès de l'opération
+                            Console.WriteLine();
+                            Console.Write("Le service a été ajouté avec succès !");
+                            Console.WriteLine();
+                            Console.WriteLine();
+                        }
+                        else
+                        {
+                            //On va le supprimer afin de garantir l'intégrité des données.
+                            listeService.services.Remove(nouveau_service);
+
+                            //Une erreur dans la sauvegarde du fichier est survenue
+                            Console.WriteLine();
+                            Console.Write("Une erreur innatendue est survenue. Le service n'a pas été ajouté.");
+                            Console.WriteLine();
+                            Console.WriteLine();
+                        }
                     }
                     //Permet de changer d'un service
                     else if(commande == "changer_service")
@@ -303,6 +312,9 @@ namespace gw_pass
                             if (listeService.services[i].nom == nom_service)
                             {
                                 trouve = true;
+
+                                //Avant d'effectuer une quelquonque opération, nous allons prendre une copie du service
+                                Service copieServiceEnCasErreur = listeService.services[i];
 
                                 //Affichage des anciennes informations du service
                                 Console.WriteLine();
@@ -325,11 +337,28 @@ namespace gw_pass
                                 listeService.services[i].identifiant = nouveau_identifiant_service;
                                 listeService.services[i].mot_de_passe = nouveau_mot_de_passe;
 
-                                //Si tout à réussi, un message de succès s'affiche
-                                Console.WriteLine();
-                                Console.Write("Le service a été modifié !");
-                                Console.WriteLine();
-                                Console.WriteLine();
+                                //On va sauvegarder les données en cas de crash/fermeture innattendue
+                                bool succes_sauvegarde = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
+
+                                if (succes_sauvegarde)
+                                {
+                                    //Affichage du succès de l'opération
+                                    Console.WriteLine();
+                                    Console.Write("Le service a été modifié avec succès !");
+                                    Console.WriteLine();
+                                    Console.WriteLine();
+                                }
+                                else
+                                {
+                                    //On va remettre le vieux service afin de garantir l'intégrité des données.
+                                    listeService.services[i] = copieServiceEnCasErreur;
+
+                                    //Une erreur dans la sauvegarde du fichier est survenue
+                                    Console.WriteLine();
+                                    Console.Write("Une erreur innattendue est survenue. Le service n'a pas été modifié.");
+                                    Console.WriteLine();
+                                    Console.WriteLine();
+                                }
                             }
                         }
 
@@ -357,10 +386,33 @@ namespace gw_pass
                             {
                                 if (listeService.services[i].nom == nom_service)
                                 {
+                                    Service copieServiceEnCasErreur = listeService.services[i];
+                                        
                                     listeService.services.Remove(listeService.services[i]);
                                     trouve = true;
-                                    Console.WriteLine("Le service a bel et bien été supprimé !");
-                                    Console.WriteLine();
+
+                                    //On va sauvegarder les données en cas de crash/fermeture innattendue
+                                    bool succes_sauvegarde = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
+
+                                    if (succes_sauvegarde)
+                                    {
+                                        //Affichage du succès de l'opération
+                                        Console.WriteLine();
+                                        Console.Write("Le service a été supprimé avec succès !");
+                                        Console.WriteLine();
+                                        Console.WriteLine();
+                                    }
+                                    else
+                                    {
+                                        //On va remettre le vieux service afin de garantir l'intégrité des données.
+                                        listeService.services[i] = copieServiceEnCasErreur;
+
+                                        //Une erreur dans la sauvegarde du fichier est survenue
+                                        Console.WriteLine();
+                                        Console.Write("Une erreur innattendue est survenue. Le service n'a pas été supprimé.");
+                                        Console.WriteLine();
+                                        Console.WriteLine();
+                                    }
                                 }
                             }
 
@@ -571,20 +623,32 @@ namespace gw_pass
         }
 
         /// <summary>
-        /// S'occupe de transférer les données au bon endroit.
+        /// Enregistre/Encrypte les données dans un fichier json.
         /// </summary>
-        /// <param name="configuration">Objet de type Configuration contenant la configuration de l'application.</param>
-        /// <param name="nom_fichier_donnees">Chemin relatif ou absolu ou le fichier devrait être écrit.</param>
-        /// <returns>Retourne vrai si tout c'est bien passé et faux dans le cas contraire.</returns>
-        public static bool sauvegarder_donnees(Configuration configuration, string nom_fichier_donnees)
+        /// <param name="configuration">Objet de type Configuration initialisé au début du programme.</param>
+        /// <param name="listeService">Objet de type ListeService initialisé au début du programme.</param>
+        /// <param name="cle_decryption_utilisateur">Clé de décryption de l'utilisateur utilisé afin d'encrypter les données.</param>
+        /// <param name="nom_fichier_donnees">Chemin relatif par défaut ou le fichier se doit d'être enregistré.</param>
+        /// <returns>Retourne vrai si tout a réussie et faux dans le cas contraire.</returns>
+        public static bool sauvegarder_donnees(Configuration configuration, ListeService listeService, SecureString cle_decryption_utilisateur, string nom_fichier_donnees)
         {
+            //On converti l'objet c# ListeService en json
+            string listeService_json_data = JsonConvert.SerializeObject(listeService, Formatting.Indented);
+
+            //On encrypte le json de la liste des services
+            string nouveaudonneesEncrypteListeService = encrypter(listeService_json_data, cle_decryption_utilisateur, configuration.sel);
+
+            //On change la liste des service dans l'objet de configuration que nous avons reçu.
+            configuration.liste_services = nouveaudonneesEncrypteListeService;
+
+            //On va tenter d'écrire les changements dans le fichier de sauvegarde
             try
             {
                 string configuration_json_data = JsonConvert.SerializeObject(configuration, Formatting.Indented);
                 File.WriteAllBytes(@nom_fichier_donnees, Encoding.UTF8.GetBytes(configuration_json_data));
                 return true;
             }
-            catch(Exception exception)
+            catch(Exception)
             {
                 //TODO: Idéalement, il faudrait logger l'erreur.
                 return false;
