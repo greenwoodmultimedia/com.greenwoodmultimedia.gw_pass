@@ -1,4 +1,6 @@
-﻿namespace gw_pass
+﻿using System;
+
+namespace gw_pass
 {
     /// <summary>
     /// Représente un service.
@@ -11,13 +13,22 @@
         public string nom { set; get; }
 
         /// <summary>
-        /// Représente le courriel d'un service.
+        /// Représente l'identifiant d'un service.
         /// </summary>
-        public string courriel { set; get; }
+        public string identifiant { set; get; }
 
         /// <summary>
         /// Représente le mot de passe d'un service.
         /// </summary>
         public string mot_de_passe { set; get; }
+
+        public void afficher_service()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Nom du service: " + nom);
+            Console.WriteLine("Identifiant du service: " + identifiant);
+            Console.WriteLine("Mot de passe: " + mot_de_passe);
+            Console.WriteLine();
+        }
     }
 }

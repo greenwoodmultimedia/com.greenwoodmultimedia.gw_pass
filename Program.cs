@@ -27,7 +27,7 @@ namespace gw_pass
             ListeService listeService = null;
             bool en_fonction = true;
             bool authentifier = false;
-            string version = "1.3.0";
+            string version = "1.4.0";
 
             //Changement du titre de la console
             Console.Title = "GW PASS - Votre keychain portatif !";
@@ -35,7 +35,7 @@ namespace gw_pass
             en_tete(version);
 
             //Message de bienvenue
-            Console.WriteLine("gw_pass>Bienvenue sur votre keychain portatif !");
+            Console.WriteLine("Bienvenue sur votre keychain portatif !");
 
             //On va chercher la configuration du fichier de données
             if (File.Exists(nom_fichier_donnees))
@@ -47,7 +47,7 @@ namespace gw_pass
                 configuration = JsonConvert.DeserializeObject<Configuration>(contenu_fichier_donnees);
 
                 //On affiche un message de succès
-                Console.WriteLine("gw_pass>Votre fichier de configuration a été trouvé.");
+                Console.WriteLine("Votre fichier de configuration a été trouvé.");
             }
             //S'il n'existe pas, on va le créer
             else
@@ -55,11 +55,11 @@ namespace gw_pass
                 ///OBTENTION DU MOT DE PASSE///
 
                 //On n'a pas trouvé le fichier de configuration, alors on va le créer.
-                Console.WriteLine("gw_pass>Aucun fichier de configuration n'a été trouvé. Nous allons en créer un avec vous.");
+                Console.WriteLine("Aucun fichier de configuration n'a été trouvé. Nous allons en créer un avec vous.");
 
                 //On entre la clé de décryption par l'utilisateur
                 Console.WriteLine();
-                Console.Write("gw_pass>Veuillez entrer un mot de passe qui sera utilisé pour l'encryption :");
+                Console.Write("Veuillez entrer un mot de passe qui sera utilisé pour l'encryption :");
                 cle_decryption_utilisateur = obtenir_mot_de_passe();
                 Console.WriteLine();
 
@@ -141,8 +141,9 @@ namespace gw_pass
                 listeService = JsonConvert.DeserializeObject<ListeService>(contenu_liste_service);
 
                 //Message destiné à l'utilisateur à sa connexion
-                Console.WriteLine("gw_pass>Vous êtes authentifié !");
-                Console.WriteLine("gw_pass>Vous avez utilisé la dernière fois ce fichier le " + configuration.derniere_date_acces + ".");
+                Console.WriteLine("Vous êtes authentifié !");
+                Console.WriteLine("Vous avez utilisé la dernière fois ce fichier le " + configuration.derniere_date_acces + ".");
+                Console.WriteLine();
 
                 //On met à jour la date d'utilisation après avoir afficher la dernière date
                 configuration.derniere_date_acces = DateTime.Now.ToString("MM-dd-yyyy hh:mm:ss");
@@ -208,13 +209,14 @@ namespace gw_pass
                             {
                                 if (listeService.services[i].nom == nom_service)
                                 {
+                                    //On affiche une en-tête aux informations du service
                                     Console.WriteLine();
                                     Console.WriteLine("INFORMATIONS DU SERVICE");
-                                    Console.WriteLine();
-                                    Console.WriteLine("Nom du service: " + listeService.services[i].nom);
-                                    Console.WriteLine("Courriel du service: " + listeService.services[i].courriel);
-                                    Console.WriteLine("Mot de passe: " + listeService.services[i].mot_de_passe);
-                                    Console.WriteLine();
+
+                                    //Affichage des données via l'appel de afficher_service
+                                    listeService.services[i].afficher_service();
+
+                                    //On indique qu'on a trouvé le service
                                     trouve = true;
                                 }
                             }
@@ -236,10 +238,13 @@ namespace gw_pass
                     else if (commande == "ajouter_service")
                     {
                         bool trouve = false;
+
+                        //On demande le nom du nouveau service
                         Console.WriteLine();
                         Console.Write("Veuillez entrer le nom du service: ");
                         string nom_service = Console.ReadLine();
 
+                        //On va chercher pour voir si le service existe déjà
                         for (int i = 0; i < listeService.services.Count; i++)
                         {
                             if (listeService.services[i].nom == nom_service)
@@ -248,6 +253,7 @@ namespace gw_pass
                             }
                         }
 
+                        //Si le service existe déjà, on afficher une erreur
                         if (trouve)
                         {
                             Console.WriteLine();
@@ -256,25 +262,85 @@ namespace gw_pass
                             continue;
                         }
 
+
+                        //Sinon, on continue et on demande les informations du service
                         Console.Write("Veuillez entrer le courriel du service: ");
-                        string courriel = Console.ReadLine();
+                        string identifiant = Console.ReadLine();
 
                         Console.Write("Veuillez entrer le mot de passe du service: ");
                         string mot_de_passe = Console.ReadLine();
 
+                        //Création de l'objet Service
                         Service nouveau_service = new Service()
                         {
                             nom = nom_service,
-                            courriel = courriel,
+                            identifiant = identifiant,
                             mot_de_passe = mot_de_passe
                         };
 
+                        //Ajout de l'objet à la liste de service
                         listeService.services.Add(nouveau_service);
 
+                        //Affichage du succès de l'opération
                         Console.WriteLine();
                         Console.Write("Le service a été ajouté avec succès !");
                         Console.WriteLine();
                         Console.WriteLine();
+                    }
+                    //Permet de changer d'un service
+                    else if(commande == "changer_service")
+                    {
+                        bool trouve = false;
+
+                        //On va demander le service à trouver
+                        Console.WriteLine();
+                        Console.Write("Veuillez entrer le nom du service à modifier: ");
+                        string nom_service = Console.ReadLine();
+
+                        //On va tenter de trouver le service
+                        for (int i = 0; i < listeService.services.Count; i++)
+                        {
+                            if (listeService.services[i].nom == nom_service)
+                            {
+                                trouve = true;
+
+                                //Affichage des anciennes informations du service
+                                Console.WriteLine();
+                                Console.WriteLine("INFORMATIONS DU SERVICE AVANT MODIFICATIONS");
+
+                                //Affichage des données via l'appel de afficher_service
+                                listeService.services[i].afficher_service();
+
+                                //Obtention des nouvelles données
+                                Console.WriteLine();
+                                Console.Write("Veuillez entrer le nouveau nom du service :");
+                                string nouveau_nom_service = Console.ReadLine();
+                                Console.Write("Veuillez entrer le nouvel identifiant du service :");
+                                string nouveau_identifiant_service = Console.ReadLine();
+                                Console.Write("Veuillez entrer le nouveau mot de passe du service :");
+                                string nouveau_mot_de_passe = Console.ReadLine();
+
+                                //On modifie l'objet de la liste des services
+                                listeService.services[i].nom = nouveau_nom_service;
+                                listeService.services[i].identifiant = nouveau_identifiant_service;
+                                listeService.services[i].mot_de_passe = nouveau_mot_de_passe;
+
+                                //Si tout à réussi, un message de succès s'affiche
+                                Console.WriteLine();
+                                Console.Write("Le service a été modifié !");
+                                Console.WriteLine();
+                                Console.WriteLine();
+                            }
+                        }
+
+                        //Si le service n'est pas trouvé, on affiche un message d'erreur
+                        if (!trouve)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine("Le service n'existe pas dans le keychain.");
+                            Console.WriteLine();
+                            continue;
+                        }
                     }
                     //Permet d'enlever un service en particulier
                     else if (commande == "enlever_service")
