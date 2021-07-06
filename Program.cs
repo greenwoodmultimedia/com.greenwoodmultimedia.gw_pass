@@ -4,8 +4,6 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Security;
-using System.Net;
-using System.Net.Mail;
 
 namespace gw_pass
 {
@@ -22,18 +20,16 @@ namespace gw_pass
         {
             //Constantes
             const string nom_fichier_donnees = "./data/gw_pass_data.json";
-            const string version = "1.5.1";
-            const string api = "gw_api.greenwoodmultimedia.com";
+            const string version = "1.5.0";
 
             //Variables du programme
-            Utilisateur utilisateur = null;
+            SecureString cle_decryption_utilisateur = null;
             Configuration configuration = null;
             ListeService listeService = null;
 
             //Variables concernant le statut du programme
             bool en_fonction = true;
             bool authentifier = false;
-            string tmp_configuration = "";
 
             /////////////DÉBUT DE PROGRAMME//////////////////
 
@@ -50,7 +46,10 @@ namespace gw_pass
             if (File.Exists(nom_fichier_donnees))
             {
                 //On va chercher le contenu du fichier de configuration
-                tmp_configuration = File.ReadAllText(nom_fichier_donnees);
+                string contenu_fichier_donnees = File.ReadAllText(nom_fichier_donnees);
+
+                //On désérialize le json du fichier
+                configuration = JsonConvert.DeserializeObject<Configuration>(contenu_fichier_donnees);
 
                 //On affiche un message de succès
                 Console.WriteLine("Votre fichier de configuration a été trouvé.");
@@ -63,16 +62,10 @@ namespace gw_pass
                 //On n'a pas trouvé le fichier de configuration, alors on va le créer.
                 Console.WriteLine("Aucun fichier de configuration n'a été trouvé. Nous allons en créer un avec vous.");
 
-                //Veuillez entrer votre courriel qui permet de réinitialiser le mot de passe et 2factorAuth
-                Console.WriteLine();
-                Console.Write("Veuillez entrer un courriel qui sera utilisé comme second facteur d'authentification :");
-                string courriel = Console.ReadLine();
-                Console.WriteLine();
-
                 //On entre la clé de décryption par l'utilisateur
                 Console.WriteLine();
                 Console.Write("Veuillez entrer un mot de passe qui sera utilisé pour l'encryption :");
-                SecureString nouveau_mot_de_passe = obtenir_mot_de_passe();
+                cle_decryption_utilisateur = obtenir_mot_de_passe();
                 Console.WriteLine();
 
                 /////////////INITIALISATION DES VARIABLES//////////////////
@@ -85,12 +78,6 @@ namespace gw_pass
                     rngCsp.GetBytes(sel_random);
                 }
 
-                //Création de l'objet représentant l'utilisateur
-                utilisateur = new Utilisateur
-                {
-                    credentiels = new NetworkCredential(courriel, nouveau_mot_de_passe)
-                };
-
                 //Création de l'objet représentant la liste des services
                 listeService = new ListeService
                 {
@@ -100,10 +87,10 @@ namespace gw_pass
                 //Création de l'objet qui représentera la configuration
                 configuration = new Configuration
                 {
-                    utilisateur = utilisateur,
+                    cle_decryption = obtenirHashSha256(cle_decryption_utilisateur),
                     sel = sel_random,
                     derniere_date_acces = DateTime.Now.ToString("MM-dd-yyyy hh:mm:ss"),
-                    liste_service = listeService
+                    liste_services = null
                 };
 
                 /////////////SAUVEGARDE//////////////////
@@ -115,7 +102,7 @@ namespace gw_pass
                 }
 
                 //Sauvegarde des données de l'application
-                bool succes = sauvegarder_donnees(configuration, nom_fichier_donnees);
+                bool succes = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
 
                 //Si une erreur survient lors du write du fichier de config, on doit stopper l'éxécution. 
                 if(!succes)
@@ -137,17 +124,17 @@ namespace gw_pass
             //On redemande la clé de décryption afin d'authentifier l'utilisateur
             Console.WriteLine();
             Console.Write("Veuillez entrer votre clé de décryption :");
-            SecureString mot_de_passe = obtenir_mot_de_passe();
+            cle_decryption_utilisateur = obtenir_mot_de_passe();
             Console.WriteLine();
 
             //Vérification de la clé de décryption afin d'authentifier l'utilisateur
-            if (obtenir_hash_sha_256(mot_de_passe) == configuration.utilisateur.credentiels.Password)
+            if (obtenirHashSha256(cle_decryption_utilisateur) == configuration.cle_decryption)
             {
                 //On flag l'utilisateur comme authentifier
                 authentifier = true;
 
                 //On décrypte la liste des services qui sera en format json
-                configuration = JsonConvert.DeserializeObject<ListeService>(decrypter(tmp_configuration, mot_de_passe));
+                string contenu_liste_service = decrypter(configuration.liste_services, cle_decryption_utilisateur, configuration.sel);
 
                 //On convertit le format json en un objet c#
                 listeService = JsonConvert.DeserializeObject<ListeService>(contenu_liste_service);
@@ -176,7 +163,7 @@ namespace gw_pass
                         en_fonction = false;
 
                         //On enregistre le data et dans la prochaine boucle, le programme se termine.
-                        sauvegarder_donnees(configuration, nom_fichier_donnees);
+                        sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
                     }
                     //Affiche la liste des services.
                     else if (commande == "liste_service")
@@ -286,11 +273,8 @@ namespace gw_pass
                         //Ajout de l'objet à la liste de service
                         listeService.services.Add(nouveau_service);
 
-                        //On va trier la liste de manière alphabétique
-                        listeService.services.Sort();
-
                         //On va sauvegarder les données en cas de crash/fermeture innattendue
-                        bool succes_sauvegarde = sauvegarder_donnees(configuration, nom_fichier_donnees);
+                        bool succes_sauvegarde = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
 
                         if(succes_sauvegarde)
                         {
@@ -353,9 +337,6 @@ namespace gw_pass
                                 listeService.services[i].identifiant = nouveau_identifiant_service;
                                 listeService.services[i].mot_de_passe = nouveau_mot_de_passe;
 
-                                //On va trier la liste de manière alphabétique
-                                listeService.services.Sort();
-
                                 //On va sauvegarder les données en cas de crash/fermeture innattendue
                                 bool succes_sauvegarde = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
 
@@ -390,11 +371,6 @@ namespace gw_pass
                             continue;
                         }
                     }
-                    //Permet de changer d'un service
-                    else if (commande == "changer_mot_de_passe")
-                    {
-                        //
-                    }
                     //Permet d'enlever un service en particulier
                     else if (commande == "enlever_service")
                     {
@@ -414,9 +390,6 @@ namespace gw_pass
                                         
                                     listeService.services.Remove(listeService.services[i]);
                                     trouve = true;
-
-                                    //On va trier la liste de manière alphabétique
-                                    listeService.services.Sort();
 
                                     //On va sauvegarder les données en cas de crash/fermeture innattendue
                                     bool succes_sauvegarde = sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
@@ -477,7 +450,6 @@ namespace gw_pass
                         Console.WriteLine();
                         Console.WriteLine("aide               | Affiche l'aide que vous voyez présentement.");
                         Console.WriteLine("ajouter_service    | Procédure pour ajouter un mot de passe du keychain.");
-                        Console.WriteLine("changer_service    | Procédure pour changer un service du keychain.");
                         Console.WriteLine("credits            | Affiche plus d'informations concernant le concepteur de gw_pass.");
                         Console.WriteLine("derniere_connexion | Indique la dernière connexion réussie de gw_pass.");
                         Console.WriteLine("effacer_console    | Efface les lignes de commande de gw_pass.");
@@ -637,7 +609,7 @@ namespace gw_pass
         /// </summary>
         /// <param name="text">Le mot de passe à hashé sous forme de Secure String.</param>
         /// <returns>Retourne le hash.</returns>
-        public static string obtenir_hash_sha_256(SecureString mot_de_passe)
+        public static string obtenirHashSha256(SecureString mot_de_passe)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(new System.Net.NetworkCredential(string.Empty, mot_de_passe).Password);
             SHA256Managed hashstring = new SHA256Managed();
@@ -658,18 +630,22 @@ namespace gw_pass
         /// <param name="cle_decryption_utilisateur">Clé de décryption de l'utilisateur utilisé afin d'encrypter les données.</param>
         /// <param name="nom_fichier_donnees">Chemin relatif par défaut ou le fichier se doit d'être enregistré.</param>
         /// <returns>Retourne vrai si tout a réussie et faux dans le cas contraire.</returns>
-        public static bool sauvegarder_donnees(Configuration configuration, string nom_fichier_donnees)
+        public static bool sauvegarder_donnees(Configuration configuration, ListeService listeService, SecureString cle_decryption_utilisateur, string nom_fichier_donnees)
         {
             //On converti l'objet c# ListeService en json
-            string configuration_json = JsonConvert.SerializeObject(configuration, Formatting.Indented);
+            string listeService_json_data = JsonConvert.SerializeObject(listeService, Formatting.Indented);
 
             //On encrypte le json de la liste des services
-            string configuration_encrypte = encrypter(configuration_json, configuration.utilisateur.credentiels.SecurePassword, configuration.sel);
+            string nouveaudonneesEncrypteListeService = encrypter(listeService_json_data, cle_decryption_utilisateur, configuration.sel);
+
+            //On change la liste des service dans l'objet de configuration que nous avons reçu.
+            configuration.liste_services = nouveaudonneesEncrypteListeService;
 
             //On va tenter d'écrire les changements dans le fichier de sauvegarde
             try
             {
-                File.WriteAllBytes(@nom_fichier_donnees, Encoding.UTF8.GetBytes(configuration_encrypte));
+                string configuration_json_data = JsonConvert.SerializeObject(configuration, Formatting.Indented);
+                File.WriteAllBytes(@nom_fichier_donnees, Encoding.UTF8.GetBytes(configuration_json_data));
                 return true;
             }
             catch(Exception)

@@ -5,7 +5,7 @@ namespace gw_pass
     /// <summary>
     /// Représente un service.
     /// </summary>
-    class Service : IEquatable<Service>, IComparable<Service>
+    class Service
     {
         /// <summary>
         /// Représente le nom d'un service.
@@ -29,20 +29,6 @@ namespace gw_pass
             Console.WriteLine("Identifiant du service: " + identifiant);
             Console.WriteLine("Mot de passe: " + mot_de_passe);
             Console.WriteLine();
-        }
-
-        int IComparable<Service>.CompareTo(Service? service)
-        {
-            if (service == null)
-                return 1;
-            else
-                return this.nom.CompareTo(service.nom);
-        }
-
-        bool IEquatable<Service>.Equals(Service? other)
-        {
-            if (other == null) return false;
-            return (this.nom.Equals(other.nom));
         }
     }
 }
