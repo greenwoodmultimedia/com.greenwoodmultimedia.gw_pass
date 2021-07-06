@@ -6,9 +6,9 @@
     class Configuration
     {
         /// <summary>
-        /// Clé de décryption.
+        /// Représente l'utilisateur qui s'est inscrit au départ de l'application.
         /// </summary>
-        public string cle_decryption { get; set; }
+        public Utilisateur utilisateur { get; set; }
 
         /// <summary>
         /// Sel ajouté à l'encryption.
@@ -23,6 +23,6 @@
         /// <summary>
         /// Liste des services enregistrés.
         /// </summary>
-        public string liste_services { get; set; }
+        public ListeService liste_service { get; set; }
     }
 }
