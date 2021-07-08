@@ -6,9 +6,19 @@
     class Configuration
     {
         /// <summary>
-        /// Représente l'utilisateur qui s'est inscrit au départ de l'application.
+        /// Version du programme.
         /// </summary>
-        public Utilisateur utilisateur { get; set; }
+        public string version { get; set; }
+
+        /// <summary>
+        /// Représente le courriel de l'utilisateur.
+        /// </summary>
+        public string courriel { get; set; }
+
+        /// <summary>
+        /// Représente le mot de passe de l'utilisateur.
+        /// </summary>
+        public string mot_de_passe { get; set; }
 
         /// <summary>
         /// Sel ajouté à l'encryption.
@@ -18,11 +28,16 @@
         /// <summary>
         /// Indique la dernière fois que la clé de décryption a bel et bien été entré.
         /// </summary>
+        public string date_initialisation { get; set; }
+
+        /// <summary>
+        /// Indique la dernière fois que la clé de décryption a bel et bien été entré.
+        /// </summary>
         public string derniere_date_acces { get; set; }
 
         /// <summary>
         /// Liste des services enregistrés.
         /// </summary>
-        public ListeService liste_service { get; set; }
+        public string liste_service { get; set; }
     }
 }

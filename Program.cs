@@ -20,7 +20,7 @@ namespace gw_pass
         {
             //Constantes
             const string nom_fichier_donnees = "./data/gw_pass_data.json";
-            const string version = "1.5.0";
+            const string version = "1.6.0";
 
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
@@ -28,7 +28,6 @@ namespace gw_pass
             ListeService listeService = null;
 
             //Variables concernant le statut du programme
-            bool en_fonction = true;
             bool authentifier = false;
 
             /////////////DÉBUT DE PROGRAMME//////////////////
@@ -61,9 +60,15 @@ namespace gw_pass
 
                 //On n'a pas trouvé le fichier de configuration, alors on va le créer.
                 Console.WriteLine("Aucun fichier de configuration n'a été trouvé. Nous allons en créer un avec vous.");
+                Console.WriteLine();
+
+                //On entre le courriel de l'utilisateur
+                Console.WriteLine("Veuillez entrer un courriel (sert en cas d'oubli de mot de passe ");
+                Console.Write("et est utilisé comme second facteur d'authentification): ");
+                string courriel = Console.ReadLine();
+                Console.WriteLine();
 
                 //On entre la clé de décryption par l'utilisateur
-                Console.WriteLine();
                 Console.Write("Veuillez entrer un mot de passe qui sera utilisé pour l'encryption :");
                 cle_decryption_utilisateur = obtenir_mot_de_passe();
                 Console.WriteLine();
@@ -87,10 +92,13 @@ namespace gw_pass
                 //Création de l'objet qui représentera la configuration
                 configuration = new Configuration
                 {
-                    cle_decryption = obtenirHashSha256(cle_decryption_utilisateur),
+                    version = version,
+                    courriel = encrypter(courriel, cle_decryption_utilisateur, sel_random),
+                    mot_de_passe = obtenirHashSha256(cle_decryption_utilisateur),
                     sel = sel_random,
+                    date_initialisation = DateTime.Now.ToString("MM-dd-yyyy hh:mm:ss"),
                     derniere_date_acces = DateTime.Now.ToString("MM-dd-yyyy hh:mm:ss"),
-                    liste_services = null
+                    liste_service = null
                 };
 
                 /////////////SAUVEGARDE//////////////////
@@ -128,13 +136,16 @@ namespace gw_pass
             Console.WriteLine();
 
             //Vérification de la clé de décryption afin d'authentifier l'utilisateur
-            if (obtenirHashSha256(cle_decryption_utilisateur) == configuration.cle_decryption)
+            if (obtenirHashSha256(cle_decryption_utilisateur) == configuration.mot_de_passe)
             {
                 //On flag l'utilisateur comme authentifier
                 authentifier = true;
 
                 //On décrypte la liste des services qui sera en format json
-                string contenu_liste_service = decrypter(configuration.liste_services, cle_decryption_utilisateur, configuration.sel);
+                string contenu_liste_service = decrypter(configuration.liste_service, cle_decryption_utilisateur, configuration.sel);
+
+                //On décrypte le courriel
+                configuration.courriel = decrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel);
 
                 //On convertit le format json en un objet c#
                 listeService = JsonConvert.DeserializeObject<ListeService>(contenu_liste_service);
@@ -148,7 +159,7 @@ namespace gw_pass
                 configuration.derniere_date_acces = DateTime.Now.ToString("MM-dd-yyyy hh:mm:ss");
 
                 //On entre dans la section commune du programme.
-                while (en_fonction && authentifier)
+                while (authentifier)
                 {
                     //Invite de commande de gw_pass
                     Console.Write("gw_pass>");
@@ -159,11 +170,11 @@ namespace gw_pass
                     //Permet de quitter le programme.
                     if (commande == "quitter")
                     {
-                        //On désactive le programme
-                        en_fonction = false;
-
                         //On enregistre le data et dans la prochaine boucle, le programme se termine.
                         sauvegarder_donnees(configuration, listeService, cle_decryption_utilisateur, nom_fichier_donnees);
+
+                        //On sort de la loop
+                        break;
                     }
                     //Affiche la liste des services.
                     else if (commande == "liste_service")
@@ -371,6 +382,15 @@ namespace gw_pass
                             continue;
                         }
                     }
+                    //Affiche des informations concernant l'installation actuelle du programme
+                    else if (commande == "configuration")
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("Identifiant de l'utilisateur | " + decrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel));
+                        Console.WriteLine("Installé le                  | " + configuration.date_initialisation);
+                        Console.WriteLine("Installé dans                | " + Directory.GetCurrentDirectory());
+                        Console.WriteLine();
+                    }
                     //Permet d'enlever un service en particulier
                     else if (commande == "enlever_service")
                     {
@@ -451,6 +471,7 @@ namespace gw_pass
                         Console.WriteLine("aide               | Affiche l'aide que vous voyez présentement.");
                         Console.WriteLine("ajouter_service    | Procédure pour ajouter un mot de passe du keychain.");
                         Console.WriteLine("credits            | Affiche plus d'informations concernant le concepteur de gw_pass.");
+                        Console.WriteLine("configuration      | Affiche plus d'informations concernant votre installation de gw_pass.");
                         Console.WriteLine("derniere_connexion | Indique la dernière connexion réussie de gw_pass.");
                         Console.WriteLine("effacer_console    | Efface les lignes de commande de gw_pass.");
                         Console.WriteLine("enlever_service    | Enlève un service du keychain.");
@@ -462,6 +483,8 @@ namespace gw_pass
                     //Affiche plus d'information concernant le concepteur de gw_pass
                     else if (commande == "credits")
                     {
+                        Console.WriteLine();
+                        Console.WriteLine("GW PASS - Version " + version); 
                         Console.WriteLine();
                         Console.WriteLine("Ce programme est la propriété intellectuelle de GreenWood Multimedia © 2021 - Tous droits réservés.");
                         Console.WriteLine("Écrit par Christopher Boisvert, propriétaire.");
@@ -639,7 +662,10 @@ namespace gw_pass
             string nouveaudonneesEncrypteListeService = encrypter(listeService_json_data, cle_decryption_utilisateur, configuration.sel);
 
             //On change la liste des service dans l'objet de configuration que nous avons reçu.
-            configuration.liste_services = nouveaudonneesEncrypteListeService;
+            configuration.liste_service = nouveaudonneesEncrypteListeService;
+
+            //On va réencrypter le courriel
+            configuration.courriel = encrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel);
 
             //On va tenter d'écrire les changements dans le fichier de sauvegarde
             try

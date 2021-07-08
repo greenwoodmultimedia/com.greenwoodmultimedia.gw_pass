@@ -10,10 +10,15 @@
     <Description>Programme console permettant de stocker des mots de passe localement sur une machine. Utilise l'encryption AES CBC afin d'assurer la confidentialité des données. Un mot de passe utilisé par l'utilisateur permet d'encrypter et de décrypter ses mots de passe. Dans le programme console, l'utilisateur peut ajouter et voir ses services.</Description>
     <NeutralLanguage>fr-CA</NeutralLanguage>
     <AssemblyOriginatorKeyFile>gw_pass_key.pfx</AssemblyOriginatorKeyFile>
-    <Version>1.4.0</Version>
-    <DelaySign>true</DelaySign>
+    <Version>1.6.0</Version>
+    <DelaySign>false</DelaySign>
+    <StartupObject>gw_pass.Program</StartupObject>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
