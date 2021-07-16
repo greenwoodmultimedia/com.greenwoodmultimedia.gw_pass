@@ -4,6 +4,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Security;
+using System.Net;
 
 namespace gw_pass
 {
@@ -18,9 +19,20 @@ namespace gw_pass
         /// <param name="args">Arguments du programme</param>
         static void Main(string[] args)
         {
+            if (args.Length == 0)
+            {
+                Console.WriteLine("Premier argument manquant. Celui-ci doit être du format Windows.");
+                Console.WriteLine("S'il s'agit de votre première utilisation, c'est à cet endroit que le fichier de données sera créer.");
+                Console.WriteLine("Vous devrez spécifier par la suite l'emplacement de ce fichier afin que le programme récupère les données.");
+                Console.WriteLine("Sous la forme C:\\mondossier");
+                Console.ReadKey();
+                return;
+            }
+
             //Constantes
-            const string nom_fichier_donnees = "./data/gw_pass_data.json";
             const string version = "1.6.0";
+            const int code_verification_max = 99999;
+            const string url_api = "gwapi.greenwoodmultimedia.com";
 
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
@@ -29,6 +41,8 @@ namespace gw_pass
 
             //Variables concernant le statut du programme
             bool authentifier = false;
+            string token = "";
+            string nom_fichier_donnees = args[0] + "\\gw_pass.json";
 
             /////////////DÉBUT DE PROGRAMME//////////////////
 
@@ -68,8 +82,11 @@ namespace gw_pass
                 string courriel = Console.ReadLine();
                 Console.WriteLine();
 
+                //Tester le courriel
+                int code_verification = new Random().Next(code_verification_max);
+
                 //On entre la clé de décryption par l'utilisateur
-                Console.Write("Veuillez entrer un mot de passe qui sera utilisé pour l'encryption :");
+                Console.Write("Veuillez entrer un mot de passe qui sera utilisé pour l'encryption: ");
                 cle_decryption_utilisateur = obtenir_mot_de_passe();
                 Console.WriteLine();
 
@@ -131,7 +148,7 @@ namespace gw_pass
 
             //On redemande la clé de décryption afin d'authentifier l'utilisateur
             Console.WriteLine();
-            Console.Write("Veuillez entrer votre clé de décryption :");
+            Console.Write("Veuillez entrer votre clé de décryption: ");
             cle_decryption_utilisateur = obtenir_mot_de_passe();
             Console.WriteLine();
 
@@ -387,8 +404,7 @@ namespace gw_pass
                     {
                         Console.WriteLine();
                         Console.WriteLine("Identifiant de l'utilisateur | " + decrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel));
-                        Console.WriteLine("Installé le                  | " + configuration.date_initialisation);
-                        Console.WriteLine("Installé dans                | " + Directory.GetCurrentDirectory());
+                        Console.WriteLine("Chemin source données        | " + nom_fichier_donnees);
                         Console.WriteLine();
                     }
                     //Permet d'enlever un service en particulier
@@ -542,7 +558,7 @@ namespace gw_pass
             byte[] clearBytes = Encoding.Unicode.GetBytes(donnees);
             using (Aes encryptor = Aes.Create())
             {
-                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(cle_encryption.ToString(), sel, 1000, HashAlgorithmName.SHA256);
+                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(obtenirHashSha256(cle_encryption), sel, 1000, HashAlgorithmName.SHA256);
                 encryptor.Key = pdb.GetBytes(32);
                 encryptor.IV = pdb.GetBytes(16);
                 using (MemoryStream ms = new MemoryStream())
@@ -570,7 +586,7 @@ namespace gw_pass
             byte[] cipherBytes = Convert.FromBase64String(donnees_encrypte);
             using (Aes encryptor = Aes.Create())
             {
-                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(cle_encryption.ToString(), sel, 1000, HashAlgorithmName.SHA256);
+                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(obtenirHashSha256(cle_encryption), sel, 1000, HashAlgorithmName.SHA256);
                 encryptor.Key = pdb.GetBytes(32);
                 encryptor.IV = pdb.GetBytes(16);
                 using (MemoryStream ms = new MemoryStream())
@@ -634,7 +650,7 @@ namespace gw_pass
         /// <returns>Retourne le hash.</returns>
         public static string obtenirHashSha256(SecureString mot_de_passe)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(new System.Net.NetworkCredential(string.Empty, mot_de_passe).Password);
+            byte[] bytes = Encoding.UTF8.GetBytes(new NetworkCredential(string.Empty, mot_de_passe).Password);
             SHA256Managed hashstring = new SHA256Managed();
             byte[] hash = hashstring.ComputeHash(bytes);
             string hashString = string.Empty;

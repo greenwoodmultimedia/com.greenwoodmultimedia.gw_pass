@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "gw_pass": {
+      "commandName": "Project",
+      "commandLineArgs": "F:\\data\\"
+    }
+  }
+}
