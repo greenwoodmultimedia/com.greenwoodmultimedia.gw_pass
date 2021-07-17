@@ -30,9 +30,7 @@ namespace gw_pass
             }
 
             //Constantes
-            const string version = "1.6.0";
-            const int code_verification_max = 99999;
-            const string url_api = "gwapi.greenwoodmultimedia.com";
+            const string version = "1.8.0";
 
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
@@ -41,7 +39,6 @@ namespace gw_pass
 
             //Variables concernant le statut du programme
             bool authentifier = false;
-            string token = "";
             string nom_fichier_donnees = args[0] + "\\gw_pass.json";
 
             /////////////DÉBUT DE PROGRAMME//////////////////
@@ -81,9 +78,6 @@ namespace gw_pass
                 Console.Write("et est utilisé comme second facteur d'authentification): ");
                 string courriel = Console.ReadLine();
                 Console.WriteLine();
-
-                //Tester le courriel
-                int code_verification = new Random().Next(code_verification_max);
 
                 //On entre la clé de décryption par l'utilisateur
                 Console.Write("Veuillez entrer un mot de passe qui sera utilisé pour l'encryption: ");
@@ -403,7 +397,7 @@ namespace gw_pass
                     else if (commande == "configuration")
                     {
                         Console.WriteLine();
-                        Console.WriteLine("Identifiant de l'utilisateur | " + decrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel));
+                        Console.WriteLine("Identifiant de l'utilisateur | " + configuration.courriel);
                         Console.WriteLine("Chemin source données        | " + nom_fichier_donnees);
                         Console.WriteLine();
                     }
