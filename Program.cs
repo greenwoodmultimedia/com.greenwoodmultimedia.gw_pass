@@ -30,7 +30,7 @@ namespace gw_pass
             }
 
             //Constantes
-            const string version = "1.8.3";
+            const string version = "1.8.4";
 
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
@@ -106,7 +106,7 @@ namespace gw_pass
                 configuration = new Configuration
                 {
                     version = version,
-                    courriel = courriel,
+                    courriel = encrypter(courriel, cle_decryption_utilisateur, sel_random),
                     mot_de_passe = obtenirHashSha256(cle_decryption_utilisateur),
                     sel = sel_random,
                     date_initialisation = DateTime.Now.ToString("MM-dd-yyyy hh:mm:ss"),
@@ -155,9 +155,6 @@ namespace gw_pass
                 listeService = JsonConvert.DeserializeObject<ListeService>(contenu_liste_service);
 
                 contenu_liste_service = null;
-
-                //On décrypte le courriel
-                configuration.courriel = decrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel);
 
                 //Message destiné à l'utilisateur à sa connexion
                 Console.WriteLine("Vous êtes authentifié !");
@@ -395,7 +392,7 @@ namespace gw_pass
                     else if (commande == "configuration")
                     {
                         Console.WriteLine();
-                        Console.WriteLine("Identifiant de l'utilisateur | " + configuration.courriel);
+                        Console.WriteLine("Identifiant de l'utilisateur | " + decrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel));
                         Console.WriteLine("Chemin source données        | " + nom_fichier_donnees);
                         Console.WriteLine();
                     }
@@ -671,9 +668,6 @@ namespace gw_pass
 
             //On efface cette variable temporaire, car elle est devenue inutile.
             listeService_json_data = null;
-
-            //On va encrypter le courriel
-            configuration.courriel = encrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel);
 
             //On va tenter d'écrire les changements dans le fichier de sauvegarde
             try
