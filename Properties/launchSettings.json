@@ -2,7 +2,7 @@
   "profiles": {
     "gw_pass": {
       "commandName": "Project",
-      "commandLineArgs": "F:\\data\\"
+      "commandLineArgs": "\"C:\\Users\\Christopher Boisvert\\source\\repos\\gw_pass\\bin\\Debug\\net5.0\""
     }
   }
 }
