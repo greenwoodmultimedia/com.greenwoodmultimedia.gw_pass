@@ -30,7 +30,7 @@ namespace gw_pass
             }
 
             //Constantes
-            const string version = "1.8.1";
+            const string version = "1.8.3";
 
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
@@ -151,13 +151,13 @@ namespace gw_pass
                 //On décrypte la liste des services qui sera en format json
                 string contenu_liste_service = decrypter(configuration.liste_service, cle_decryption_utilisateur, configuration.sel);
 
-                //On décrypte le courriel
-                configuration.courriel = decrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel);
-
                 //On convertit le format json en un objet c#
                 listeService = JsonConvert.DeserializeObject<ListeService>(contenu_liste_service);
 
                 contenu_liste_service = null;
+
+                //On décrypte le courriel
+                configuration.courriel = decrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel);
 
                 //Message destiné à l'utilisateur à sa connexion
                 Console.WriteLine("Vous êtes authentifié !");
@@ -666,11 +666,11 @@ namespace gw_pass
             //On converti l'objet c# ListeService en json
             string listeService_json_data = JsonConvert.SerializeObject(listeService, Formatting.Indented);
 
-            //On encrypte le json de la liste des services
-            string nouveaudonneesEncrypteListeService = encrypter(listeService_json_data, cle_decryption_utilisateur, configuration.sel);
-
             //On change la liste des service dans l'objet de configuration que nous avons reçu.
-            configuration.liste_service = nouveaudonneesEncrypteListeService;
+            configuration.liste_service = encrypter(listeService_json_data, cle_decryption_utilisateur, configuration.sel);
+
+            //On efface cette variable temporaire, car elle est devenue inutile.
+            listeService_json_data = null;
 
             //On va encrypter le courriel
             configuration.courriel = encrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel);
@@ -678,13 +678,22 @@ namespace gw_pass
             //On va tenter d'écrire les changements dans le fichier de sauvegarde
             try
             {
+                //On va convertir l'objet de configuration en JSON
                 string configuration_json_data = JsonConvert.SerializeObject(configuration, Formatting.Indented);
+
+                //On va tenter d'écrire ce fichier à l'endroit indiquer par l'utilisateur
                 File.WriteAllBytes(@nom_fichier_donnees, Encoding.UTF8.GetBytes(configuration_json_data));
+
+                ///On va supprimer la valeur du JSON, car elle n'est plus nécessaire
+                configuration_json_data = null;
+
+                //Si tout ceci c'est bien effectué, on va retourner vrai
                 return true;
             }
             catch(Exception)
             {
                 //TODO: Idéalement, il faudrait logger l'erreur.
+                //Dans le cas contraire, on va retourner faux
                 return false;
             }
         }
