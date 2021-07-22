@@ -30,7 +30,7 @@ namespace gw_pass
             }
 
             //Constantes
-            const string version = "1.8.4";
+            const string version = "1.8.5";
 
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
@@ -392,8 +392,9 @@ namespace gw_pass
                     else if (commande == "configuration")
                     {
                         Console.WriteLine();
-                        Console.WriteLine("Identifiant de l'utilisateur | " + decrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel));
-                        Console.WriteLine("Chemin source données        | " + nom_fichier_donnees);
+                        Console.WriteLine("Identifiant de l'utilisateur                  | " + decrypter(configuration.courriel, cle_decryption_utilisateur, configuration.sel));
+                        Console.WriteLine("Date de création du fichier de données        | " + configuration.date_initialisation);
+                        Console.WriteLine("Chemin absolu du fichier de données           | " + nom_fichier_donnees);
                         Console.WriteLine();
                     }
                     //Permet d'enlever un service en particulier
