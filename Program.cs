@@ -30,7 +30,7 @@ namespace gw_pass
             }
 
             //Constantes
-            const string version = "1.8.5";
+            const string version = "1.8.6";
 
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
@@ -154,6 +154,9 @@ namespace gw_pass
                 //On convertit le format json en un objet c#
                 listeService = JsonConvert.DeserializeObject<ListeService>(contenu_liste_service);
 
+                //On va trier les données en ordre alpabhétique
+                listeService.services.Sort();
+
                 contenu_liste_service = null;
 
                 //Message destiné à l'utilisateur à sa connexion
@@ -190,6 +193,7 @@ namespace gw_pass
                             Console.WriteLine();
                             Console.WriteLine("Voici la liste des services trouvés : ");
                             Console.WriteLine();
+
                             for (int i = 0; i < listeService.services.Count; i++)
                             {
                                 Console.WriteLine("- " + listeService.services[i].nom);
