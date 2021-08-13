@@ -5,6 +5,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Security;
 using System.Net;
+using System.Reflection;
+using System.Diagnostics;
 
 namespace gw_pass
 {
@@ -29,9 +31,6 @@ namespace gw_pass
                 return;
             }
 
-            //Constantes
-            const string version = "1.8.6";
-
             //Variables du programme
             SecureString cle_decryption_utilisateur = null;
             Configuration configuration = null;
@@ -47,7 +46,7 @@ namespace gw_pass
             Console.Title = "GW PASS - Votre keychain portatif !";
 
             //Affiche l'en-tête du programme gw_pass
-            en_tete(version);
+            en_tete();
 
             //Message de bienvenue
             Console.WriteLine("Bienvenue sur votre keychain portatif !");
@@ -105,7 +104,7 @@ namespace gw_pass
                 //Création de l'objet qui représentera la configuration
                 configuration = new Configuration
                 {
-                    version = version,
+                    version = version(),
                     courriel = encrypter(courriel, cle_decryption_utilisateur, sel_random),
                     mot_de_passe = obtenirHashSha256(cle_decryption_utilisateur),
                     sel = sel_random,
@@ -346,11 +345,11 @@ namespace gw_pass
 
                                 //Obtention des nouvelles données
                                 Console.WriteLine();
-                                Console.Write("Veuillez entrer le nouveau nom du service :");
+                                Console.Write("Veuillez entrer le nouveau nom du service: ");
                                 string nouveau_nom_service = Console.ReadLine();
-                                Console.Write("Veuillez entrer le nouvel identifiant du service :");
+                                Console.Write("Veuillez entrer le nouvel identifiant du service: ");
                                 string nouveau_identifiant_service = Console.ReadLine();
-                                Console.Write("Veuillez entrer le nouveau mot de passe du service :");
+                                Console.Write("Veuillez entrer le nouveau mot de passe du service: ");
                                 string nouveau_mot_de_passe = Console.ReadLine();
 
                                 //On modifie l'objet de la liste des services
@@ -494,7 +493,7 @@ namespace gw_pass
                     else if (commande == "credits")
                     {
                         Console.WriteLine();
-                        Console.WriteLine("GW PASS - Version " + version); 
+                        Console.WriteLine("GW PASS - Version " + version()); 
                         Console.WriteLine();
                         Console.WriteLine("Ce programme est la propriété intellectuelle de GreenWood Multimedia © 2021 - Tous droits réservés.");
                         Console.WriteLine("Écrit par Christopher Boisvert, propriétaire.");
@@ -524,13 +523,13 @@ namespace gw_pass
         /// Affiche l'en-tête du programme.
         /// </summary>
         /// <param name="version">Version du programme.</param>
-        public static void en_tete(string version)
+        public static void en_tete()
         {
             Console.WriteLine();
             Console.WriteLine("-------------------------------");
             Console.WriteLine("--                           --");
             Console.WriteLine("--    GreenWood Multimedia   --");
-            Console.WriteLine("--   gw_pass Version " + version + "   --");
+            Console.WriteLine("--   gw_pass Version " + version() + "   --");
             Console.WriteLine("--                           --");
             Console.WriteLine("--          © " + DateTime.Now.ToString("yyyy") + "           --");
             Console.WriteLine("--                           --");
@@ -538,6 +537,18 @@ namespace gw_pass
             Console.WriteLine("--                           --");
             Console.WriteLine("-------------------------------");
             Console.WriteLine();
+        }
+
+        /// <summary>
+        /// Fonction qui permet de retourner la version du programme.
+        /// </summary>
+        /// <returns>Retourne la version actuelle du programme.</returns>
+        public static string version()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+            return fileVersionInfo.ProductVersion;
+            return fileVersionInfo.ProductVersion;
         }
 
         /// <summary>
