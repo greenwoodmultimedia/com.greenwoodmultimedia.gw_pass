@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <Authors>Christopher Boisvert</Authors>
+    <Company>GreenWood Multimedia</Company>
+    <Copyright>GreenWood Multimedia © 2021</Copyright>
+    <SignAssembly>true</SignAssembly>
+    <Description>Programme console permettant de stocker des mots de passe localement sur une machine. Utilise l'encryption AES CBC afin d'assurer la confidentialité des données. Un mot de passe utilisé par l'utilisateur permet d'encrypter et de décrypter ses mots de passe. Dans le programme console, l'utilisateur peut ajouter et voir ses services.</Description>
+    <NeutralLanguage>fr-CA</NeutralLanguage>
+    <AssemblyOriginatorKeyFile>gw_pass_key.pfx</AssemblyOriginatorKeyFile>
+    <Version>1.8.7</Version>
+    <DelaySign>false</DelaySign>
+    <StartupObject>gw_pass.Program</StartupObject>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>0</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+</Project>
