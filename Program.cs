@@ -564,8 +564,8 @@ namespace gw_pass
             using (Aes encryptor = Aes.Create())
             {
                 Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(obtenirHashSha256(cle_encryption), sel, 1000, HashAlgorithmName.SHA256);
-                encryptor.Key = pdb.GetBytes(32);
-                encryptor.IV = pdb.GetBytes(16);
+                encryptor.Key = pdb.GetBytes(256);
+                encryptor.IV = pdb.GetBytes(128);
                 using (MemoryStream ms = new MemoryStream())
                 {
                     using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateEncryptor(), CryptoStreamMode.Write))
@@ -592,8 +592,8 @@ namespace gw_pass
             using (Aes encryptor = Aes.Create())
             {
                 Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(obtenirHashSha256(cle_encryption), sel, 1000, HashAlgorithmName.SHA256);
-                encryptor.Key = pdb.GetBytes(32);
-                encryptor.IV = pdb.GetBytes(16);
+                encryptor.Key = pdb.GetBytes(256);
+                encryptor.IV = pdb.GetBytes(128);
                 using (MemoryStream ms = new MemoryStream())
                 {
                     using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateDecryptor(), CryptoStreamMode.Write))
