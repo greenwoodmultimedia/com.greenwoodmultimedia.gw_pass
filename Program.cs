@@ -548,7 +548,6 @@ namespace gw_pass
             Assembly assembly = Assembly.GetExecutingAssembly();
             FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
             return fileVersionInfo.ProductVersion;
-            return fileVersionInfo.ProductVersion;
         }
 
         /// <summary>
