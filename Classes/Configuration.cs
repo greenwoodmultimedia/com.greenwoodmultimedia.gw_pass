@@ -1,8 +1,11 @@
-﻿namespace gw_pass
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace gw_pass.Classes
 {
-    /// <summary>
-    /// Représente la configuration de gw_pass.
-    /// </summary>
     class Configuration
     {
         /// <summary>
@@ -36,8 +39,12 @@
         public string derniere_date_acces { get; set; }
 
         /// <summary>
-        /// Liste des services enregistrés.
+        /// Fonction qui retourne un tableau contenant les trois chiffres de la version actuelle de gw_pass.
         /// </summary>
-        public string liste_service { get; set; }
+        /// <returns>Tableau int[3].</returns>
+        public int[] obtenir_numero_version()
+        {
+            return new int[3] { int.Parse(version.Split(".")[0]), int.Parse(version.Split(".")[0]), int.Parse(version.Split(".")[0]) };
+        }
     }
 }

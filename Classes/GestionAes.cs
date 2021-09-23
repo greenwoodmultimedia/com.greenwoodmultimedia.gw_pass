@@ -14,17 +14,11 @@ namespace gw_pass.Classes
     {
         private SecureString cle;
         private byte[] sel;
-        private SecureString secureString;
 
         public GestionAes(SecureString cle, byte[] sel)
         {
             this.cle = cle;
             this.sel = sel;
-        }
-
-        public GestionAes(SecureString secureString)
-        {
-            this.secureString = secureString;
         }
 
         /// <summary>

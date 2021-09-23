@@ -22,15 +22,6 @@ namespace gw_pass
         /// </summary>
         public string mot_de_passe { set; get; }
 
-        public void afficher_service()
-        {
-            Console.WriteLine();
-            Console.WriteLine("Nom du service: " + nom);
-            Console.WriteLine("Identifiant du service: " + identifiant);
-            Console.WriteLine("Mot de passe: " + mot_de_passe);
-            Console.WriteLine();
-        }
-
         int IComparable<Service>.CompareTo(Service? service)
         {
             if (service == null)

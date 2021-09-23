@@ -1,15 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace gw_pass
+namespace gw_pass.Classes
 {
-    /// <summary>
-    /// Représente la liste de tous les services.
-    /// </summary>
     class ListeService
     {
-        /// <summary>
-        /// Variable contenant tous les services.
-        /// </summary>
-        public List<Service> services { get; set; }
+        public List<Service> services;
     }
 }
