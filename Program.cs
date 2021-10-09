@@ -16,6 +16,20 @@ namespace gw_pass
     /// </summary>
     class Program
     {
+
+        private const string NOM_APP = "GW PASS - Votre gestionnaire de clé portatif !";
+        private const string MESSAGE_ACCUEIL = "Bienvenue sur votre keychain portatif !";
+        private const string EXPLICATION_ARGUMENTS_1 = "- Vous devez spécifier le premier argument !";
+        private const string EXPLICATION_ARGUMENTS_2 = "- Celui-ci doit être doit être un chemin absolu vers le dossier auquel vous voulez stocker les mot de passe.";
+        private const string EXPLICATION_ARGUMENTS_3 = "- Vous devrez spécifier à chaque fois que vous voulez récuperer les données.";
+        private const string EXPLICATION_ARGUMENTS_4 = "- Exemple : gw_passe.exe C:\\mondossier";
+        private const string NOM_FICHIER_DEFAUT = "\\gw_pass.json";
+        private const string DEMANDER_QUITTER_APPLICATION = "Veuillez pressez une touche pour quitter...";
+        private const string DEMANDER_CLE_ENCRYPTION = "Veuillez entrer votre clé de décryption: ";
+        private const string MESSAGE_AUTHENTIFICATION = "Vous êtes authentifié !";
+        private const string MESSAGE_ERREUR_AUTHENTIFICATION = "Votre authentification a échoué ! Le programme va se fermer après que vous toucher sur une touche...";
+        private const string PREFIXE_COMMANDE_CONSOLE = "gw_pass>";
+
         /// <summary>
         /// Point d'entrée du programme.
         /// </summary>
@@ -23,23 +37,21 @@ namespace gw_pass
         static void Main(string[] args)
         {
             //Changement du titre de la console
-            Console.Title = "GW PASS - Votre gestionnaire de clé portatif !";
+            Console.Title = NOM_APP;
 
             //Affiche l'en-tête du programme gw_pass
             en_tete();
 
             //Message de bienvenue
-            Console.WriteLine(" Bienvenue sur votre keychain portatif !");
+            ecrire_texte_console(MESSAGE_ACCUEIL, 0, 0);
 
             if (args.Length == 0)
             {
-                Console.WriteLine();
-                Console.WriteLine(" - Vous devez spécifier le premier argument !");
-                Console.WriteLine(" - Celui-ci doit être doit être un chemin absolu vers le dossier auquel vous voulez stocker les mot de passe.");
-                Console.WriteLine(" - Vous devrez spécifier à chaque fois que vous voulez récuperer les données.");
-                Console.WriteLine(" - Exemple : gw_passe.exe C:\\mondossier");
-                Console.WriteLine();
-                Console.Write(" Veuillez pressez une touche pour quitter...");
+                ecrire_texte_console(EXPLICATION_ARGUMENTS_1, 1, 0);
+                ecrire_texte_console(EXPLICATION_ARGUMENTS_2, 0, 0);
+                ecrire_texte_console(EXPLICATION_ARGUMENTS_3, 0, 0);
+                ecrire_texte_console(EXPLICATION_ARGUMENTS_4, 0, 1);
+                Console.Write(DEMANDER_QUITTER_APPLICATION);
                 Console.ReadKey();
                 return;
             }
@@ -51,7 +63,7 @@ namespace gw_pass
 
             //Variables concernant le statut du programme
             bool authentifier = false;
-            string nom_fichier_donnees = args[0] + "\\gw_pass.json";
+            string nom_fichier_donnees = args[0] + NOM_FICHIER_DEFAUT;
 
             //On va chercher la configuration du fichier de données
             if (File.Exists(nom_fichier_donnees))
@@ -68,17 +80,13 @@ namespace gw_pass
                 {
                     Configuration configurationBase = JsonConvert.DeserializeObject<Configuration>(contenu_fichier_donnees);
 
-                    Console.WriteLine();
-                    Console.WriteLine("Votre fichier de configuration est écrit dans une version antérieure à la version de gw_pass que vous utiliser.");
-                    Console.WriteLine();
-                    Console.WriteLine("Version actuelle de gw_pass: " + version());
-                    Console.WriteLine("Version du fichier gw_pass.json: " + configurationBase.version);
-                    Console.WriteLine();
-                    Console.Write("Votre mot de passe sera requis afin de pouvoir effectuer la conversion du fichier.");
-                    Console.WriteLine();
-                    Console.Write("Veuillez entrer votre mot de passe: ");
+                    ecrire_texte_console("Votre fichier de configuration est écrit dans une version antérieure à la version de gw_pass que vous utiliser.", 1, 1);
+                    ecrire_texte_console("Version actuelle de gw_pass: " + version(), 0, 0);
+                    ecrire_texte_console("Version du fichier gw_pass.json: " + configurationBase.version, 0, 1);
+                    ecrire_texte_console("Votre mot de passe sera requis afin de pouvoir effectuer la conversion du fichier.", 0, 1);
+                    ecrire_ligne("Veuillez entrer votre mot de passe: ");
                     cle_decryption_utilisateur = obtenir_mot_de_passe();
-                    Console.WriteLine();
+                    ecrire_texte_console("", 0, 0);
 
                     if (GestionAes.sha_256(cle_decryption_utilisateur) == configurationBase.mot_de_passe)
                     {
@@ -117,37 +125,31 @@ namespace gw_pass
                             //Si une erreur survient lors du write du fichier de config, on doit stopper l'éxécution. 
                             if (!succes)
                             {
-                                Console.WriteLine();
-                                Console.WriteLine("gw_pass>Une erreur est survenue lors de la tentative d'écriture du fichier de configuration.");
-                                Console.WriteLine();
+                                ecrire_texte_console("Une erreur est survenue lors de la tentative d'écriture du fichier de configuration.", 1, 1);
 
                                 //On sort du programme, car il n'a rien à faire.
                                 return;
                             }
 
                             //Succes !
-                            Console.WriteLine("Nouveau fichier de configuration par défaut créer et encrypté !");
+                            ecrire_texte_console("Nouveau fichier de configuration par défaut créer et encrypté !", 0, 0);
                             authentifier = true;
                         }
                         else
                         {
-                            Console.WriteLine();
-                            Console.WriteLine("Une erreur est survenue !");
-                            Console.WriteLine();
+                            ecrire_texte_console("Une erreur est survenue !", 1, 1);
                             return;
                         }
                     }
                     else
                     {
-                        Console.WriteLine();
-                        Console.WriteLine("Vous n'avez pas entré le bon mot de passe !");
-                        Console.WriteLine();
+                        ecrire_texte_console("Vous n'avez pas entré le bon mot de passe !", 1, 1);
                         return;
                     }
                 }
 
                 //On affiche un message de succès
-                Console.WriteLine("Votre fichier de configuration a été trouvé.");
+                ecrire_texte_console("Votre fichier de configuration a été trouvé.", 0, 0);
             }
             //S'il n'existe pas, on va le créer
             else
@@ -155,19 +157,18 @@ namespace gw_pass
                 ///OBTENTION DU MOT DE PASSE///
 
                 //On n'a pas trouvé le fichier de configuration, alors on va le créer.
-                Console.WriteLine("Aucun fichier de configuration n'a été trouvé. Nous allons en créer un avec vous.");
-                Console.WriteLine();
+                ecrire_texte_console("Aucun fichier de configuration n'a été trouvé. Nous allons en créer un avec vous.", 0, 1);
 
                 //On entre le courriel de l'utilisateur
-                Console.WriteLine("Veuillez entrer un courriel (sert en cas d'oubli de mot de passe ");
-                Console.Write("et est utilisé comme second facteur d'authentification): ");
+                ecrire_texte_console("Veuillez entrer un courriel (sert en cas d'oubli de mot de passe ", 0, 0);
+                ecrire_ligne("et est utilisé comme second facteur d'authentification): ");
                 string courriel = Console.ReadLine();
-                Console.WriteLine();
+                ecrire_texte_console("", 0, 0);
 
                 //On entre la clé de décryption par l'utilisateur
-                Console.Write("Veuillez entrer un mot de passe qui sera utilisé pour l'encryption: ");
+                ecrire_ligne("Veuillez entrer un mot de passe qui sera utilisé pour l'encryption: ");
                 cle_decryption_utilisateur = obtenir_mot_de_passe();
-                Console.WriteLine();
+                ecrire_texte_console("", 0, 0);
 
                 /////////////INITIALISATION DES VARIABLES//////////////////
 
@@ -202,25 +203,23 @@ namespace gw_pass
                 //Si une erreur survient lors du write du fichier de config, on doit stopper l'éxécution. 
                 if(!succes)
                 {
-                    Console.WriteLine();
-                    Console.WriteLine("gw_pass>Une erreur est survenue lors de la tentative d'écriture du fichier de configuration.");
-                    Console.WriteLine();
+                    ecrire_texte_console("Une erreur est survenue lors de la tentative d'écriture du fichier de configuration.", 1, 1);
 
                     //On sort du programme, car il n'a rien à faire.
                     return;
                 }
 
                 //Succes !
-                Console.WriteLine("gw_pass>Fichier de configuration par défaut créer et encrypté !");
+                ecrire_texte_console("Fichier de configuration par défaut créer et encrypté !", 0, 0);
             }
 
             /////////////AUTHENFICATION//////////////////
 
             //On redemande la clé de décryption afin d'authentifier l'utilisateur
-            Console.WriteLine();
-            Console.Write("Veuillez entrer votre clé de décryption: ");
+            ecrire_texte_console("", 0, 0);
+            ecrire_ligne(DEMANDER_CLE_ENCRYPTION);
             cle_decryption_utilisateur = obtenir_mot_de_passe();
-            Console.WriteLine();
+            ecrire_texte_console("", 0, 0);
 
             //Vérification de la clé de décryption afin d'authentifier l'utilisateur
             if (GestionAes.sha_256(cle_decryption_utilisateur) == configuration.mot_de_passe || authentifier)
@@ -230,13 +229,14 @@ namespace gw_pass
                     gestionAes = new GestionAes(cle_decryption_utilisateur, configuration.sel);
                 }
 
+                Console.Clear();
+
                 //On flag l'utilisateur comme authentifier
                 authentifier = true;
 
                 //Message destiné à l'utilisateur à sa connexion
-                Console.WriteLine("Vous êtes authentifié !");
-                Console.WriteLine("Vous avez utilisé la dernière fois ce fichier le " + gestionAes.decrypter(configuration.derniere_date_acces) + ".");
-                Console.WriteLine();
+                ecrire_texte_console(MESSAGE_AUTHENTIFICATION , 1, 0);
+                ecrire_texte_console("Vous avez utilisé la dernière fois ce fichier le " + gestionAes.decrypter(configuration.derniere_date_acces) + ".", 0, 1);
 
                 //On met à jour la date d'utilisation après avoir afficher la dernière date
                 configuration.derniere_date_acces = gestionAes.encrypter(DateTime.Now.ToString("MM-dd-yyyy hh:mm:ss"));
@@ -245,7 +245,7 @@ namespace gw_pass
                 while (authentifier)
                 {
                     //Invite de commande de gw_pass
-                    Console.Write("gw_pass>");
+                    ecrire_ligne(PREFIXE_COMMANDE_CONSOLE);
 
                     //Lecture de la commande
                     string commande = Console.ReadLine();
@@ -270,21 +270,17 @@ namespace gw_pass
                                 configuration.liste_service.Sort();
                             }
 
-                            Console.WriteLine();
-                            Console.WriteLine("Voici la liste des services trouvés : ");
-                            Console.WriteLine();
+                            ecrire_texte_console("Voici la liste des services trouvés : ", 1, 1);
 
                             for (int i = 0; i < configuration.liste_service.Count; i++)
                             {
                                 Console.WriteLine("- " + gestionAes.decrypter(configuration.liste_service[i].nom));
                             }
-                            Console.WriteLine();
+                            ecrire_texte_console("", 0, 0);
                         }
                         else
                         {
-                            Console.WriteLine();
-                            Console.WriteLine("Aucun service trouvé. Veuillez en ajouter un dans le keychain.");
-                            Console.WriteLine();
+                            ecrire_texte_console("Aucun service trouvé. Veuillez en ajouter un dans le gestionnaire de clé.", 1, 1);
                         }
                     }
                     //Permet de voir un service en particulier
@@ -294,23 +290,22 @@ namespace gw_pass
                         {
                             bool trouve = false;
 
-                            Console.WriteLine();
-                            Console.Write("Veuillez entrer le nom du service: ");
+                            ecrire_texte_console("", 0, 0);
+                            ecrire_ligne("Veuillez entrer le nom du service: ");
                             string nom_service = Console.ReadLine();
-                            Console.WriteLine();
+                            ecrire_texte_console("", 0, 0);
 
                             for (int i = 0; i < configuration.liste_service.Count; i++)
                             {
-                                if (configuration.liste_service[i].nom == nom_service)
+                                if (configuration.liste_service[i].nom == gestionAes.encrypter(nom_service))
                                 {
                                     //On affiche une en-tête aux informations du service
-                                    Console.WriteLine();
-                                    Console.WriteLine("INFORMATIONS DU SERVICE");
+                                    ecrire_texte_console("INFORMATIONS DU SERVICE", 1, 0);
 
                                     //Affichage des données via l'appel de afficher_service
-                                    Console.WriteLine("Nom du service: " + gestionAes.decrypter(configuration.liste_service[i].nom));
-                                    Console.WriteLine("Identifiant: " + gestionAes.decrypter(configuration.liste_service[i].identifiant));
-                                    Console.WriteLine("Mot de passe: " + gestionAes.decrypter(configuration.liste_service[i].mot_de_passe));
+                                    ecrire_texte_console("Nom du service: " + gestionAes.decrypter(configuration.liste_service[i].nom), 0, 0);
+                                    ecrire_texte_console("Identifiant: " + gestionAes.decrypter(configuration.liste_service[i].identifiant), 0, 0);
+                                    ecrire_texte_console("Mot de passe: " + gestionAes.decrypter(configuration.liste_service[i].mot_de_passe), 0, 0);
 
                                     //On indique qu'on a trouvé le service
                                     trouve = true;
@@ -319,15 +314,12 @@ namespace gw_pass
 
                             if(trouve == false)
                             {
-                                Console.WriteLine("Ce service n'existe pas !");
-                                Console.WriteLine();
+                                ecrire_texte_console("Ce service n'existe pas !", 0, 1);
                             }
                         }
                         else
                         {
-                            Console.WriteLine();
-                            Console.WriteLine("Aucun service trouvé. Veuillez en ajouter un dans le gestionnaire de clé.");
-                            Console.WriteLine();
+                            ecrire_texte_console("Aucun service trouvé. Veuillez en ajouter un dans le gestionnaire de clé.", 1, 1);
                         }
                     }
                     //Permet d'ajouter un service en particulier
@@ -336,14 +328,14 @@ namespace gw_pass
                         bool trouve = false;
 
                         //On demande le nom du nouveau service
-                        Console.WriteLine();
-                        Console.Write("Veuillez entrer le nom du service: ");
+                        ecrire_texte_console("", 0, 0);
+                        ecrire_ligne("Veuillez entrer le nom du service: ");
                         string nom_service = Console.ReadLine();
 
                         //On va chercher pour voir si le service existe déjà
                         for (int i = 0; i < configuration.liste_service.Count; i++)
                         {
-                            if (configuration.liste_service[i].nom == nom_service)
+                            if (configuration.liste_service[i].nom == gestionAes.encrypter(nom_service))
                             {
                                 trouve = true;
                             }
@@ -352,17 +344,15 @@ namespace gw_pass
                         //Si le service existe déjà, on afficher une erreur
                         if (trouve)
                         {
-                            Console.WriteLine();
-                            Console.WriteLine("Un service du même nom existe déjà ! Le service demandé ne sera pas ajouté !");
-                            Console.WriteLine();
+                            ecrire_texte_console("Un service du même nom existe déjà ! Le service demandé ne sera pas ajouté !", 1, 1);
                             continue;
                         }
 
                         //Sinon, on continue et on demande les informations du service
-                        Console.Write("Veuillez entrer le courriel du service: ");
+                        ecrire_ligne("Veuillez entrer le courriel du service: ");
                         string identifiant = Console.ReadLine();
 
-                        Console.Write("Veuillez entrer le mot de passe du service: ");
+                        ecrire_ligne("Veuillez entrer le mot de passe du service: ");
                         string mot_de_passe = Console.ReadLine();
 
                         //Création de l'objet Service
@@ -388,10 +378,7 @@ namespace gw_pass
                         if (succes_sauvegarde)
                         {
                             //Affichage du succès de l'opération
-                            Console.WriteLine();
-                            Console.Write("Le service a été ajouté avec succès !");
-                            Console.WriteLine();
-                            Console.WriteLine();
+                            ecrire_texte_console("Le service a été ajouté avec succès !", 1, 2);
                         }
                         else
                         {
@@ -399,10 +386,7 @@ namespace gw_pass
                             configuration.liste_service.Remove(nouveau_service);
 
                             //Une erreur dans la sauvegarde du fichier est survenue
-                            Console.WriteLine();
-                            Console.Write("Une erreur innatendue est survenue. Le service n'a pas été ajouté.");
-                            Console.WriteLine();
-                            Console.WriteLine();
+                            ecrire_texte_console("Une erreur innatendue est survenue. Le service n'a pas été ajouté.", 1, 2);
                         }
                     }
                     //Permet de changer d'un service
@@ -411,14 +395,14 @@ namespace gw_pass
                         bool trouve = false;
 
                         //On va demander le service à trouver
-                        Console.WriteLine();
-                        Console.Write("Veuillez entrer le nom du service à modifier: ");
+                        ecrire_texte_console("", 0, 0);
+                        ecrire_ligne("Veuillez entrer le nom du service à modifier: ");
                         string nom_service = Console.ReadLine();
 
                         //On va tenter de trouver le service
                         for (int i = 0; i < configuration.liste_service.Count; i++)
                         {
-                            if (configuration.liste_service[i].nom == nom_service)
+                            if (configuration.liste_service[i].nom == gestionAes.encrypter(nom_service))
                             {
                                 trouve = true;
 
@@ -426,21 +410,20 @@ namespace gw_pass
                                 Service copieServiceEnCasErreur = configuration.liste_service[i];
 
                                 //Affichage des anciennes informations du service
-                                Console.WriteLine();
-                                Console.WriteLine("INFORMATIONS DU SERVICE AVANT MODIFICATIONS");
+                                ecrire_texte_console("INFORMATIONS DU SERVICE AVANT MODIFICATIONS", 1, 0);
 
                                 //Affichage des données via l'appel de afficher_service
-                                Console.WriteLine("Nom du service: " + gestionAes.decrypter(configuration.liste_service[i].nom));
-                                Console.WriteLine("Identifiant: " + gestionAes.decrypter(configuration.liste_service[i].identifiant));
-                                Console.WriteLine("Mot de passe: " + gestionAes.decrypter(configuration.liste_service[i].mot_de_passe));
+                                ecrire_texte_console("Nom du service: " + gestionAes.decrypter(configuration.liste_service[i].nom), 0, 0);
+                                ecrire_texte_console("Identifiant: " + gestionAes.decrypter(configuration.liste_service[i].identifiant), 0, 0);
+                                ecrire_texte_console("Mot de passe: " + gestionAes.decrypter(configuration.liste_service[i].mot_de_passe), 0, 0);
 
                                 //Obtention des nouvelles données
-                                Console.WriteLine();
-                                Console.Write("Veuillez entrer le nouveau nom du service: ");
+                                ecrire_texte_console("", 0, 0);
+                                ecrire_ligne("Veuillez entrer le nouveau nom du service: ");
                                 string nouveau_nom_service = Console.ReadLine();
-                                Console.Write("Veuillez entrer le nouvel identifiant du service: ");
+                                ecrire_ligne("Veuillez entrer le nouvel identifiant du service: ");
                                 string nouveau_identifiant_service = Console.ReadLine();
-                                Console.Write("Veuillez entrer le nouveau mot de passe du service: ");
+                                ecrire_ligne("Veuillez entrer le nouveau mot de passe du service: ");
                                 string nouveau_mot_de_passe = Console.ReadLine();
 
                                 //On modifie l'objet de la liste des services
@@ -460,10 +443,7 @@ namespace gw_pass
                                 if (succes_sauvegarde)
                                 {
                                     //Affichage du succès de l'opération
-                                    Console.WriteLine();
-                                    Console.Write("Le service a été modifié avec succès !");
-                                    Console.WriteLine();
-                                    Console.WriteLine();
+                                    ecrire_texte_console("Le service a été modifié avec succès !", 1, 2);
                                 }
                                 else
                                 {
@@ -471,10 +451,7 @@ namespace gw_pass
                                     configuration.liste_service[i] = copieServiceEnCasErreur;
 
                                     //Une erreur dans la sauvegarde du fichier est survenue
-                                    Console.WriteLine();
-                                    Console.Write("Une erreur innattendue est survenue. Le service n'a pas été modifié.");
-                                    Console.WriteLine();
-                                    Console.WriteLine();
+                                    ecrire_texte_console("Une erreur innattendue est survenue. Le service n'a pas été modifié.", 1, 2);
                                 }
                             }
                         }
@@ -482,20 +459,16 @@ namespace gw_pass
                         //Si le service n'est pas trouvé, on affiche un message d'erreur
                         if (!trouve)
                         {
-                            Console.WriteLine();
-                            Console.WriteLine("Le service n'existe pas dans le keychain.");
-                            Console.WriteLine();
+                            ecrire_texte_console("Le service n'existe pas dans le keychain.", 1, 1);
                             continue;
                         }
                     }
                     //Affiche des informations concernant l'installation actuelle du programme
                     else if (commande == "configuration" || commande == "conf")
                     {
-                        Console.WriteLine();
-                        Console.WriteLine("Identifiant de l'utilisateur                  | " + gestionAes.decrypter(configuration.courriel));
-                        Console.WriteLine("Date de création du fichier de données        | " + configuration.date_initialisation);
-                        Console.WriteLine("Chemin absolu du fichier de données           | " + nom_fichier_donnees);
-                        Console.WriteLine();
+                        ecrire_texte_console("Identifiant de l'utilisateur                  | " + gestionAes.decrypter(configuration.courriel), 1, 0);
+                        ecrire_texte_console("Date de création du fichier de données        | " + configuration.date_initialisation, 0, 0);
+                        ecrire_texte_console("Chemin absolu du fichier de données           | " + nom_fichier_donnees, 0, 1);
                     }
                     //Permet d'enlever un service en particulier
                     else if (commande == "enlever_service" || commande == "es")
@@ -503,10 +476,10 @@ namespace gw_pass
                         if (configuration.liste_service != null && configuration.liste_service.Count > 0)
                         {
                             bool trouve = false;
-                            Console.WriteLine();
-                            Console.Write("Veuillez entrer le nom du service: ");
+                            ecrire_texte_console("", 0, 0);
+                            ecrire_ligne("Veuillez entrer le nom du service: ");
                             string nom_service = Console.ReadLine();
-                            Console.WriteLine();
+                            ecrire_texte_console("", 0, 0);
 
                             for (int i = 0; i < configuration.liste_service.Count; i++)
                             {
@@ -528,10 +501,7 @@ namespace gw_pass
                                     if (succes_sauvegarde)
                                     {
                                         //Affichage du succès de l'opération
-                                        Console.WriteLine();
-                                        Console.Write("Le service a été supprimé avec succès !");
-                                        Console.WriteLine();
-                                        Console.WriteLine();
+                                        ecrire_texte_console("Le service a été supprimé avec succès !", 1, 2);
                                     }
                                     else
                                     {
@@ -539,26 +509,19 @@ namespace gw_pass
                                         configuration.liste_service[i] = copieServiceEnCasErreur;
 
                                         //Une erreur dans la sauvegarde du fichier est survenue
-                                        Console.WriteLine();
-                                        Console.Write("Une erreur innattendue est survenue. Le service n'a pas été supprimé.");
-                                        Console.WriteLine();
-                                        Console.WriteLine();
+                                        ecrire_texte_console("Une erreur innattendue est survenue. Le service n'a pas été supprimé.", 1, 2);
                                     }
                                 }
                             }
 
                             if (trouve == false)
                             {
-                                Console.WriteLine("Ce service n'existe pas !");
-                                Console.WriteLine();
+                                ecrire_texte_console("Ce service n'existe pas !", 0, 1);
                             }
                         }
                         else
                         {
-                            Console.WriteLine();
-                            Console.Write("Aucun service trouvé dans le keychain. Impossible de supprimer le service demandé.");
-                            Console.WriteLine();
-                            Console.WriteLine();
+                            ecrire_texte_console("Aucun service trouvé dans le keychain. Impossible de supprimer le service demandé.", 1, 2);
                         }
                     }
                     //Efface la console afin d'aider au niveau de la confidentialité
@@ -569,64 +532,49 @@ namespace gw_pass
                     //Permet de retrouver la date/heure de dernière connexion
                     else if (commande == "derniere_connexion" || commande == "dc")
                     {
-                        Console.WriteLine();
-                        Console.WriteLine("Vous avez utilisé la dernière fois ce fichier le " + gestionAes.decrypter(configuration.derniere_date_acces) + ".");
-                        Console.WriteLine();
+                        ecrire_texte_console("Vous avez utilisé la dernière fois ce fichier le " + gestionAes.decrypter(configuration.derniere_date_acces) + ".", 1, 1);
                     }
                     //Affiche une aide expliquant les commandes gw_pass.
                     else if (commande == "aide" || commande == "a")
                     {
-                        Console.WriteLine();
-                        Console.WriteLine("                      Aide                                 ");
-                        Console.WriteLine();
+                        ecrire_texte_console("                      Aide                                 ", 1, 1);
+                        ecrire_texte_console("Nom de la commande | Raccourci | Description de la commande", 0, 1);
 
-                        Console.WriteLine("Nom de la commande | Raccourci | Description de la commande");
-                        Console.WriteLine();
-                        Console.WriteLine("aide               | a         | Affiche l'aide que vous voyez présentement.");
-                        Console.WriteLine("credits            | crd       | Affiche les crédits concernant gw_pass.");
-                        Console.WriteLine("configuration      | conf      | Affiche plus d'informations concernant votre installation de gw_pass.");
-                        Console.WriteLine("derniere_connexion | dc        | Indique la dernière connexion réussie de gw_pass.");
-                        Console.WriteLine("effacer_console    | eff       | Efface la console.");
-                        Console.WriteLine("quitter            | q         | Ferme gw_pass.");
+                        ecrire_texte_console("aide               | a         | Affiche l'aide que vous voyez présentement.", 0, 0);
+                        ecrire_texte_console("credits            | crd       | Affiche les crédits concernant gw_pass.", 0, 0);
+                        ecrire_texte_console("configuration      | conf      | Affiche plus d'informations concernant votre installation de gw_pass.", 0, 0);
+                        ecrire_texte_console("derniere_connexion | dc        | Indique la dernière connexion réussie de gw_pass.", 0, 0);
+                        ecrire_texte_console("effacer_console    | eff       | Efface la console.", 0, 0);
+                        ecrire_texte_console("quitter            | q         | Ferme gw_pass.", 0, 0);
 
-                        Console.WriteLine();
-                        Console.WriteLine("                Gestion des services                       ");
-                        Console.WriteLine();
+                        ecrire_texte_console("                Gestion des services                       ", 1, 1);
 
-                        Console.WriteLine("liste_service      | ls        | Procédure pour voir tous les services ayant été enregistré dans le gestionnaire de clés.");
-                        Console.WriteLine("voir_service       | vs        | Procédure pour voir un des mots de passe du gestionnaire de clés.");
-                        Console.WriteLine("ajouter_service    | as        | Procédure pour ajouter un mot de passe du gestionnaire de clés.");
-                        Console.WriteLine("changer_service    | cs        | Procéder pour changer un service du gestionnaire de clés.");
-                        Console.WriteLine("enlever_service    | es        | Enlève un service du gestionnaire de clés.");
-                        Console.WriteLine();
+                        ecrire_texte_console("liste_service      | ls        | Procédure pour voir tous les services ayant été enregistré dans le gestionnaire de clés.", 0, 0);
+                        ecrire_texte_console("voir_service       | vs        | Procédure pour voir un des mots de passe du gestionnaire de clés.", 0, 0);
+                        ecrire_texte_console("ajouter_service    | as        | Procédure pour ajouter un mot de passe du gestionnaire de clés.", 0, 0);
+                        ecrire_texte_console("changer_service    | cs        | Procéder pour changer un service du gestionnaire de clés.", 0, 0);
+                        ecrire_texte_console("enlever_service    | es        | Enlève un service du gestionnaire de clés.", 0, 1);
                     }
                     //Affiche plus d'information concernant le concepteur de gw_pass
                     else if (commande == "credits" || commande == "crd")
                     {
-                        Console.WriteLine();
-                        Console.WriteLine("GW PASS - Version " + version()); 
-                        Console.WriteLine();
-                        Console.WriteLine("Ce programme est la propriété intellectuelle de GreenWood Multimedia © 2021 - Tous droits réservés.");
-                        Console.WriteLine("Écrit par Christopher Boisvert, propriétaire.");
-                        Console.WriteLine();
-                        Console.WriteLine("Pour en savoir plus sur GreenWood Multimedia");
-                        Console.WriteLine("https://greenwoodmultimedia.com");
-                        Console.WriteLine();
+                        ecrire_texte_console("GW PASS - Version " + version(), 1, 1);
+                        ecrire_texte_console("Ce programme est la propriété intellectuelle de GreenWood Multimedia © 2021 - Tous droits réservés.", 0, 0);
+                        ecrire_texte_console("Écrit par Christopher Boisvert, propriétaire.", 0, 0);
+                        ecrire_texte_console("Pour en savoir plus sur GreenWood Multimedia", 1, 0);
+                        ecrire_texte_console("https://greenwoodmultimedia.com", 0, 1);
                     }
                     //Si aucune commande est reconnu, on affiche un message d'erreur.
                     else
                     {
-                        Console.WriteLine();
-                        Console.WriteLine(" Commande '" + commande + "' non reconnu. Veuillez écrire 'aide' afin d'obtenir la liste des commandes possibles.");
-                        Console.WriteLine();
+                        ecrire_texte_console(" Commande '" + commande + "' non reconnu. Veuillez écrire 'aide' afin d'obtenir la liste des commandes possibles.", 1, 1);
                     }
                 }
             }
             //Le programme se ferme an cas d'authentification échoué
             else
             {
-                Console.WriteLine("Votre authentification a échoué ! Le programme va se fermer après que vous toucher sur une touche...");
-                Console.ReadLine();
+                ecrire_texte_console(MESSAGE_ERREUR_AUTHENTIFICATION, 0, 1);
             }
         }
 
@@ -636,18 +584,16 @@ namespace gw_pass
         /// <param name="version">Version du programme.</param>
         public static void en_tete()
         {
-            Console.WriteLine();
-            Console.WriteLine(" -------------------------------");
-            Console.WriteLine(" --                           --");
-            Console.WriteLine(" --    GreenWood Multimedia   --");
-            Console.WriteLine(" --   gw_pass Version " + version() + "   --");
-            Console.WriteLine(" --                           --");
-            Console.WriteLine(" --          © " + DateTime.Now.ToString("yyyy") + "           --");
-            Console.WriteLine(" --                           --");
-            Console.WriteLine(" --    Tous droits réservés   --");
-            Console.WriteLine(" --                           --");
-            Console.WriteLine(" -------------------------------");
-            Console.WriteLine();
+            ecrire_texte_console("-------------------------------", 1, 0);
+            ecrire_texte_console("--                           --", 0, 0);
+            ecrire_texte_console("--    GreenWood Multimedia   --", 0, 0);
+            ecrire_texte_console("--   gw_pass Version " + version() + "   --", 0, 0);
+            ecrire_texte_console("--                           --", 0, 0);
+            ecrire_texte_console("--          © " + DateTime.Now.ToString("yyyy") + "           --", 0, 0);
+            ecrire_texte_console("--                           --", 0, 0);
+            ecrire_texte_console("--    Tous droits réservés   --", 0, 0);
+            ecrire_texte_console("--                           --", 0, 0);
+            ecrire_texte_console("-------------------------------", 0, 1);
         }
 
         /// <summary>
@@ -697,7 +643,7 @@ namespace gw_pass
                     Console.Write("*");
                 }
             } while (key.Key != ConsoleKey.Enter);
-            Console.WriteLine();
+            ecrire_texte_console("", 0, 0);
 
             return securePwd;
         }
@@ -732,6 +678,40 @@ namespace gw_pass
                 //Dans le cas contraire, on va retourner faux
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Méthode permet d'écrire une ligne à la console avec des espaces avant ou après.
+        /// </summary>
+        /// <param name="contenu">Contenu à écrire à la console.</param>
+        /// <param name="nombre_espace_avant">Nombre de lignes à mettre avant le contenu.</param>
+        /// <param name="nombre_espace_apres">Nombre de lignes à mettre après le contenu.</param>
+        public static void ecrire_texte_console(string contenu, int nombre_espace_avant, int nombre_espace_apres)
+        {
+            if(nombre_espace_avant > 0)
+            {
+                for (int i = 0; i < nombre_espace_avant; i++)
+                {
+                    Console.WriteLine();
+                }
+            }
+            Console.WriteLine(" " + contenu);
+            if (nombre_espace_apres > 0)
+            {
+                for (int i = 0; i < nombre_espace_apres; i++)
+                {
+                    Console.WriteLine();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Méthode permettant d'écrire une ligne à la console.
+        /// </summary>
+        /// <param name="contenu"></param>
+        public static void ecrire_ligne(string contenu)
+        {
+            Console.Write(" " + contenu);
         }
     }
 }
