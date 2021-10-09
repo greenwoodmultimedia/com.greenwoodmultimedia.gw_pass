@@ -27,13 +27,13 @@ namespace gw_pass
             if (service == null)
                 return 1;
             else
-                return this.nom.CompareTo(service.nom);
+                return nom.CompareTo(service.nom);
         }
 
         bool IEquatable<Service>.Equals(Service? other)
         {
             if (other == null) return false;
-            return (this.nom.Equals(other.nom));
+            return (nom.Equals(other.nom));
         }
     }
 }

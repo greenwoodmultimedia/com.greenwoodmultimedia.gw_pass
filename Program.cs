@@ -267,7 +267,7 @@ namespace gw_pass
                             //On va trier les services
                             if (configuration.liste_service.Count > 1)
                             {
-                                configuration.liste_service.Sort();
+                                configuration.trier_liste_service(gestionAes);
                             }
 
                             ecrire_texte_console("Voici la liste des services trouvés : ", 1, 1);
@@ -369,7 +369,7 @@ namespace gw_pass
                         //On va trier les services
                         if(configuration.liste_service.Count > 1)
                         {
-                            configuration.liste_service.Sort();
+                            configuration.trier_liste_service(gestionAes);
                         }
 
                         //On va sauvegarder les données en cas de crash/fermeture innattendue
@@ -434,7 +434,7 @@ namespace gw_pass
                                 //On va trier les services, si il y a plus d'un élément
                                 if (configuration.liste_service.Count > 1)
                                 {
-                                    configuration.liste_service.Sort();
+                                    configuration.trier_liste_service(gestionAes);
                                 }
 
                                 //On va sauvegarder les données en cas de crash/fermeture innattendue
