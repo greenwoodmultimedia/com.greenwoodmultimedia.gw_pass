@@ -293,7 +293,6 @@ namespace gw_pass
                             ecrire_texte_console("", 0, 0);
                             ecrire_ligne("Veuillez entrer le nom du service: ");
                             string nom_service = Console.ReadLine();
-                            ecrire_texte_console("", 0, 0);
 
                             for (int i = 0; i < configuration.liste_service.Count; i++)
                             {
@@ -305,7 +304,7 @@ namespace gw_pass
                                     //Affichage des données via l'appel de afficher_service
                                     ecrire_texte_console("Nom du service: " + gestionAes.decrypter(configuration.liste_service[i].nom), 0, 0);
                                     ecrire_texte_console("Identifiant: " + gestionAes.decrypter(configuration.liste_service[i].identifiant), 0, 0);
-                                    ecrire_texte_console("Mot de passe: " + gestionAes.decrypter(configuration.liste_service[i].mot_de_passe), 0, 0);
+                                    ecrire_texte_console("Mot de passe: " + gestionAes.decrypter(configuration.liste_service[i].mot_de_passe), 0, 1);
 
                                     //On indique qu'on a trouvé le service
                                     trouve = true;
@@ -314,7 +313,7 @@ namespace gw_pass
 
                             if(trouve == false)
                             {
-                                ecrire_texte_console("Ce service n'existe pas !", 0, 1);
+                                ecrire_texte_console("Ce service n'existe pas !", 1, 1);
                             }
                         }
                         else
@@ -378,7 +377,7 @@ namespace gw_pass
                         if (succes_sauvegarde)
                         {
                             //Affichage du succès de l'opération
-                            ecrire_texte_console("Le service a été ajouté avec succès !", 1, 2);
+                            ecrire_texte_console("Le service a été ajouté avec succès !", 1, 1);
                         }
                         else
                         {
@@ -443,7 +442,7 @@ namespace gw_pass
                                 if (succes_sauvegarde)
                                 {
                                     //Affichage du succès de l'opération
-                                    ecrire_texte_console("Le service a été modifié avec succès !", 1, 2);
+                                    ecrire_texte_console("Le service a été modifié avec succès !", 1, 1);
                                 }
                                 else
                                 {
@@ -501,7 +500,7 @@ namespace gw_pass
                                     if (succes_sauvegarde)
                                     {
                                         //Affichage du succès de l'opération
-                                        ecrire_texte_console("Le service a été supprimé avec succès !", 1, 2);
+                                        ecrire_texte_console("Le service a été supprimé avec succès !", 0, 1);
                                     }
                                     else
                                     {
